@@ -1,0 +1,482 @@
+{
+  "input_digest": "7ad46b2b5d43634a2860ec515b3df7ee6fec677969b2575e97fd28019ad5c2a5",
+  "separate_sections": [
+    "house blend",
+    "seasonal specials"
+  ],
+  "series": [
+    {
+      "name": "Coconut series",
+      "description": "100% fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.",
+      "source_ids": [
+        "source-08"
+      ],
+      "price_claims": []
+    },
+    {
+      "name": "Tea series",
+      "description": null,
+      "source_ids": [
+        "source-06",
+        "source-14"
+      ],
+      "price_claims": [
+        {
+          "size": "small",
+          "price": 15.0,
+          "source_id": "source-14"
+        },
+        {
+          "size": "large",
+          "price": 17.0,
+          "source_id": "source-14"
+        }
+      ]
+    }
+  ],
+  "items": {
+    "source-02:1": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-02:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default. Join the wrapped product name; cloud is part of its name, distinct from strawberry coconut.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ],
+        "name": "strawberry coconut cloud",
+        "section": null
+      }
+    },
+    "source-02:3": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": "iced",
+            "price": 16.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-06:0": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-06:1": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-06:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-10:0": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-10:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-14:6": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": "iced",
+            "price": 20.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-14:7": {
+      "reason": "Tea series is a priced group; individual drinks are named in source 06.",
+      "exclude": true
+    },
+    "source-14:8": {
+      "reason": "The specialty table does not state hot for this row; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-14:9": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": "iced",
+            "price": 16.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-14:10": {
+      "reason": "The specialty table does not state hot for this row; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-01:0": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": null,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-02:0": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": "iced",
+            "price": 20.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-13:0": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": null,
+            "price_note": null
+          }
+        ],
+        "name": "einspanner",
+        "description": "Iced black coffee from our seasonal coffee topped with creamy cheese foam."
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-06:3": {
+      "reason": "Branding, not a sellable drink.",
+      "exclude": true
+    },
+    "source-07:0": {
+      "reason": "Restore the product name printed in the OCR transcription.",
+      "set": {
+        "name": "dirty earl"
+      }
+    },
+    "source-08:0": {
+      "reason": "Coconut series is a group description, not a product; the attached prices were misassigned.",
+      "exclude": true
+    },
+    "source-08:1": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:2": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:3": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:4": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-09:6": {
+      "reason": "Optional extra already represented in addons; not a standalone drink.",
+      "exclude": true
+    },
+    "source-09:7": {
+      "reason": "Optional extra already represented in addons; not a standalone drink.",
+      "exclude": true
+    },
+    "source-12:0": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 22.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-12:1": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 23.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-12:2": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 23.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-14:4": {
+      "reason": "Hot and iced are variants of mocha.",
+      "canonical_name": "mocha",
+      "set": {
+        "description": null
+      },
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:5": {
+      "reason": "Hot and iced are variants of mocha.",
+      "canonical_name": "mocha",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:0": {
+      "reason": "Column headings are not a product description.",
+      "set": {
+        "description": null
+      },
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:0": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:1": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:3": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:4": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:1": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:2": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    }
+  }
+}

@@ -1,0 +1,2775 @@
+{
+  "schema_version": 1,
+  "status": "draft",
+  "currency": null,
+  "input_digest": "7ad46b2b5d43634a2860ec515b3df7ee6fec677969b2575e97fd28019ad5c2a5",
+  "product_count": 34,
+  "products": [
+    {
+      "product_id": "drink-1a64ccdf9857",
+      "name": "vienna latte",
+      "context": null,
+      "aliases": [
+        "iced vienna latte",
+        "vienna latte"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "text": "specialty drinks",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 6
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "A creamy iced latte topped with smooth whipped cream and a dash of cocoa powder.",
+          "source_refs": [
+            {
+              "source_id": "source-01",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-01",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "small",
+          "temperature": "iced",
+          "price": 18.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 0
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 6
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": "iced",
+          "price": 20.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 0
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 6
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-01",
+          "item_index": 0
+        },
+        {
+          "source_id": "source-02",
+          "item_index": 0
+        },
+        {
+          "source_id": "source-14",
+          "item_index": 6
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-1499f8ec2ab2",
+      "name": "coffee coconut",
+      "context": null,
+      "aliases": [
+        "coffee coconut"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 1
+            },
+            {
+              "source_id": "source-08",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 1
+            },
+            {
+              "source_id": "source-08",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Coconut series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-02",
+          "item_index": 1
+        },
+        {
+          "source_id": "source-08",
+          "item_index": 1
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-2ed69c540e4d",
+      "name": "strawberry coconut cloud",
+      "context": null,
+      "aliases": [
+        "strawberry coconut"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": null,
+          "temperature": null,
+          "price": 21.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-02",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-a1060f2f5200",
+      "name": "einspanner",
+      "context": null,
+      "aliases": [
+        "einspanner",
+        "Iced black coffee from our seasonal coffee topped with creamy cheese foam"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 3
+            }
+          ]
+        },
+        {
+          "text": "specialty drinks",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 9
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "Iced black coffee from our seasonal coffee topped with creamy cheese foam.",
+          "source_refs": [
+            {
+              "source_id": "source-13",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": "iced",
+          "price": 16.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 3
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 9
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": "iced",
+          "price": 18.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-02",
+              "item_index": 3
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 9
+            }
+          ]
+        },
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-13",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-02",
+          "item_index": 3
+        },
+        {
+          "source_id": "source-13",
+          "item_index": 0
+        },
+        {
+          "source_id": "source-14",
+          "item_index": 9
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-25cf53c5384f",
+      "name": "creme chocolate",
+      "context": null,
+      "aliases": [
+        "creme chocolate"
+      ],
+      "categories": [
+        {
+          "text": "specialty drinks",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 10
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "A match made in heaven - our 50% organic dark cacao topped with creamy cheese foam.",
+          "source_refs": [
+            {
+              "source_id": "source-03",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 10
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 10
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-03",
+          "item_index": 0
+        },
+        {
+          "source_id": "source-14",
+          "item_index": 10
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-e7517f3522b3",
+      "name": "hojigato",
+      "context": null,
+      "aliases": [
+        "hojigato"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "A twist on the classic affogato, served with creamy vanilla ice cream from Bulla and Hojicha.",
+          "source_refs": [
+            {
+              "source_id": "source-04",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-04",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-5bc8c8384c26",
+      "name": "affogato",
+      "context": null,
+      "aliases": [
+        "affogato"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "A traditional Italian dessert served with creamy vanilla ice cream from Bulla and a double shot of espresso.",
+          "source_refs": [
+            {
+              "source_id": "source-05",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-05",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-10e7d5643847",
+      "name": "geisha dream",
+      "context": null,
+      "aliases": [
+        "geisha dream"
+      ],
+      "categories": [
+        {
+          "text": "Tea series",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "TWG Geisha Blossom Tea, cream cheese foam",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Tea series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-06",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-f9810565cc86",
+      "name": "la rose noir",
+      "context": null,
+      "aliases": [
+        "la rose noir"
+      ],
+      "categories": [
+        {
+          "text": "Tea series",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "TWG Black Tea, cream cheese foam",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Tea series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-06",
+          "item_index": 1
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-728b6eca5cd5",
+      "name": "london fog",
+      "context": null,
+      "aliases": [
+        "london fog"
+      ],
+      "categories": [
+        {
+          "text": "Tea series",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "TWG Earl Grey Tea, cream cheese foam",
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-06",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Tea series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-06",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-d4aa7a2e0a78",
+      "name": "dirty earl",
+      "context": null,
+      "aliases": [
+        "dirty earl grey"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "earl grey milk, coffee, salted cold foam",
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-07",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-fdac1a3c4f83",
+      "name": "earl grey matcha",
+      "context": null,
+      "aliases": [
+        "earl grey matcha"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "earl grey milk, matcha",
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "hot",
+          "price": 22.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 22.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-07",
+          "item_index": 1
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-5d7bf03c4a05",
+      "name": "earl grey chocolate",
+      "context": null,
+      "aliases": [
+        "earl grey chocolate"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "earl grey milk, chocola",
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "hot",
+          "price": 20.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 20.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-07",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-07",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-34c7b3c15cf5",
+      "name": "choco coconut",
+      "context": null,
+      "aliases": [
+        "choco coconut"
+      ],
+      "categories": [],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Coconut series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-08",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-e3f1f8ece5b0",
+      "name": "strawberry coconut",
+      "context": null,
+      "aliases": [
+        "strawberry coconut"
+      ],
+      "categories": [],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 3
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Coconut series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-08",
+          "item_index": 3
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-fd04c5ee17a3",
+      "name": "matcha coconut",
+      "context": null,
+      "aliases": [
+        "matcha coconut"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 4
+            },
+            {
+              "source_id": "source-10",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-08",
+              "item_index": 4
+            },
+            {
+              "source_id": "source-10",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [
+        "Coconut series"
+      ],
+      "source_refs": [
+        {
+          "source_id": "source-08",
+          "item_index": 4
+        },
+        {
+          "source_id": "source-10",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-7b9ac7b9a75f",
+      "name": "black coffee",
+      "context": "house blend",
+      "aliases": [
+        "black coffee"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "black",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 11.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": "iced",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 13.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 0
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-c51b372e5104",
+      "name": "white coffee",
+      "context": "house blend",
+      "aliases": [
+        "white coffee"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "white",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "piccolo (3oz)",
+          "temperature": "hot",
+          "price": 8.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 13.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 1
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-09d9774fe45e",
+      "name": "espresso",
+      "context": "house blend",
+      "aliases": [
+        "espresso"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "espresso",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "single",
+          "temperature": "hot",
+          "price": 7.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": "double",
+          "temperature": "hot",
+          "price": 9.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-40e70dcc16ae",
+      "name": "black coffee",
+      "context": "seasonal specials",
+      "aliases": [
+        "black coffee"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "black",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 13.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": "iced",
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 3
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-6c64421d99d7",
+      "name": "white coffee",
+      "context": "seasonal specials",
+      "aliases": [
+        "white coffee"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "white",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "piccolo (3oz)",
+          "temperature": "hot",
+          "price": 10.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 4
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 4
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-42855c34224c",
+      "name": "espresso",
+      "context": "seasonal specials",
+      "aliases": [
+        "espresso"
+      ],
+      "categories": [
+        {
+          "text": "coffee",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 5
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "espresso",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 5
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "single",
+          "temperature": "hot",
+          "price": 9.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 5
+            }
+          ]
+        },
+        {
+          "size": "double",
+          "temperature": "hot",
+          "price": 11.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 5
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 5
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-f66b20a242b1",
+      "name": "filter coffee",
+      "context": null,
+      "aliases": [
+        "filter coffee"
+      ],
+      "categories": [
+        {
+          "text": "specialty",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 8
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "price based on coffee origin",
+          "source_refs": [
+            {
+              "source_id": "source-09",
+              "item_index": 8
+            }
+          ]
+        }
+      ],
+      "variants": [],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-09",
+          "item_index": 8
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-c3ca1831238c",
+      "name": "matcha strawberry milk",
+      "context": null,
+      "aliases": [
+        "matcha strawberry milk"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": null,
+          "temperature": null,
+          "price": 23.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-10",
+          "item_index": 1
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-5bcc7051aa87",
+      "name": "matcha cloud",
+      "context": null,
+      "aliases": [
+        "matcha cloud"
+      ],
+      "categories": [
+        {
+          "text": "specials",
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "text": "specialty drinks",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 8
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": null,
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 2
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 8
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": null,
+          "price": 21.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-10",
+              "item_index": 2
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 8
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-10",
+          "item_index": 2
+        },
+        {
+          "source_id": "source-14",
+          "item_index": 8
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-834ad2e4ce1f",
+      "name": "TIRAMISU",
+      "context": null,
+      "aliases": [
+        "TIRAMISU"
+      ],
+      "categories": [],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": null,
+          "temperature": null,
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-11",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-11",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-052aa74f1a46",
+      "name": "kurma cream latte",
+      "context": null,
+      "aliases": [
+        "kurma cream latte"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "double ristretto, milk, kurma cream",
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 22.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-12",
+          "item_index": 0
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-9474426a8e04",
+      "name": "matcha gula apong",
+      "context": null,
+      "aliases": [
+        "matcha gula apong"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "matcha, gula apong, milk, gula apong granules",
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 23.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-12",
+          "item_index": 1
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-423d316a3004",
+      "name": "matcha apong brûlée",
+      "context": null,
+      "aliases": [
+        "matcha apong brûlée"
+      ],
+      "categories": [],
+      "descriptions": [
+        {
+          "text": "matcha cream, gula apong, milk, gula apong brûlée",
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 23.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-12",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-12",
+          "item_index": 2
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-231e75b26e4a",
+      "name": "matcha",
+      "context": null,
+      "aliases": [
+        "matcha"
+      ],
+      "categories": [
+        {
+          "text": "non-coffee",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 16.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": "iced",
+          "price": 20.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 18.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 0
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 0
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-14",
+          "item_index": 0
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-209674eec2aa",
+      "name": "hojicha",
+      "context": null,
+      "aliases": [
+        "hojicha"
+      ],
+      "categories": [
+        {
+          "text": "non-coffee",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 17.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 1
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 19.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 1
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-14",
+          "item_index": 1
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-3bb91607b6a5",
+      "name": "chocolate",
+      "context": null,
+      "aliases": [
+        "chocolate"
+      ],
+      "categories": [
+        {
+          "text": "non-coffee",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "(50% organic cacao)",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 14.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 16.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 2
+            }
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 18.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 2
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-14",
+          "item_index": 2
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-624c158e3ced",
+      "name": "tea (pot)",
+      "context": null,
+      "aliases": [
+        "tea (pot)"
+      ],
+      "categories": [
+        {
+          "text": "non-coffee",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "descriptions": [
+        {
+          "text": "(TWG tea)",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "size": null,
+          "temperature": null,
+          "price": 15.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 3
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-14",
+          "item_index": 3
+        }
+      ],
+      "issues": [],
+      "status": "draft"
+    },
+    {
+      "product_id": "drink-0f49697f52e1",
+      "name": "mocha",
+      "context": null,
+      "aliases": [
+        "mocha (hot)",
+        "mocha (iced)"
+      ],
+      "categories": [
+        {
+          "text": "specialty drinks",
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 4
+            },
+            {
+              "source_id": "source-14",
+              "item_index": 5
+            }
+          ]
+        }
+      ],
+      "descriptions": [],
+      "variants": [
+        {
+          "size": "small",
+          "temperature": "hot",
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 4
+            }
+          ]
+        },
+        {
+          "size": "large",
+          "temperature": "hot",
+          "price": null,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 4
+            }
+          ]
+        },
+        {
+          "size": null,
+          "temperature": "iced",
+          "price": 20.0,
+          "price_note": null,
+          "source_refs": [
+            {
+              "source_id": "source-14",
+              "item_index": 5
+            }
+          ]
+        }
+      ],
+      "series": [],
+      "source_refs": [
+        {
+          "source_id": "source-14",
+          "item_index": 4
+        },
+        {
+          "source_id": "source-14",
+          "item_index": 5
+        }
+      ],
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ],
+      "status": "draft"
+    }
+  ],
+  "series": [
+    {
+      "name": "Coconut series",
+      "description": "100% fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.",
+      "source_ids": [
+        "source-08"
+      ],
+      "price_claims": [],
+      "product_ids": [
+        "drink-1499f8ec2ab2",
+        "drink-34c7b3c15cf5",
+        "drink-e3f1f8ece5b0",
+        "drink-fd04c5ee17a3"
+      ]
+    },
+    {
+      "name": "Tea series",
+      "description": null,
+      "source_ids": [
+        "source-06",
+        "source-14"
+      ],
+      "price_claims": [
+        {
+          "size": "small",
+          "price": 15.0,
+          "source_id": "source-14"
+        },
+        {
+          "size": "large",
+          "price": 17.0,
+          "source_id": "source-14"
+        }
+      ],
+      "product_ids": [
+        "drink-10e7d5643847",
+        "drink-f9810565cc86",
+        "drink-728b6eca5cd5"
+      ]
+    }
+  ],
+  "addons_by_source": [
+    {
+      "source_id": "source-09",
+      "addons": [
+        {
+          "name": "extra shot",
+          "price": 3.0,
+          "applies_to": [
+            "espresso"
+          ]
+        },
+        {
+          "name": "oat milk",
+          "price": 3.0,
+          "applies_to": [
+            "coffee"
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "source-14",
+      "addons": [
+        {
+          "name": "extra shot",
+          "price": 3.0,
+          "applies_to": [
+            "mocha (hot)",
+            "mocha (iced)",
+            "chocolate",
+            "hojicha",
+            "matcha"
+          ]
+        },
+        {
+          "name": "oat milk",
+          "price": 3.0,
+          "applies_to": [
+            "mocha (hot)",
+            "mocha (iced)",
+            "chocolate",
+            "hojicha",
+            "matcha"
+          ]
+        }
+      ]
+    }
+  ],
+  "review_decisions": {
+    "source-02:1": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-02:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default. Join the wrapped product name; cloud is part of its name, distinct from strawberry coconut.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ],
+        "name": "strawberry coconut cloud",
+        "section": null
+      }
+    },
+    "source-02:3": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": "iced",
+            "price": 16.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-06:0": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-06:1": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-06:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 15.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          }
+        ]
+      },
+      "series": [
+        "Tea series"
+      ]
+    },
+    "source-10:0": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-10:2": {
+      "reason": "OCR does not state hot for this drink; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-14:6": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": "iced",
+            "price": 20.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-14:7": {
+      "reason": "Tea series is a priced group; individual drinks are named in source 06.",
+      "exclude": true
+    },
+    "source-14:8": {
+      "reason": "The specialty table does not state hot for this row; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": null,
+            "price": 21.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-14:9": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": "iced",
+            "price": 16.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-14:10": {
+      "reason": "The specialty table does not state hot for this row; remove the model default.",
+      "set": {
+        "variants": [
+          {
+            "size": "small",
+            "temperature": null,
+            "price": 17.0,
+            "price_note": null
+          },
+          {
+            "size": "large",
+            "temperature": null,
+            "price": 19.0,
+            "price_note": null
+          }
+        ]
+      }
+    },
+    "source-01:0": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": null,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-02:0": {
+      "reason": "Vienna latte entries refer to the iced drink explicitly named in sources 01 and 02.",
+      "set": {
+        "variants": [
+          {
+            "size": "S",
+            "temperature": "iced",
+            "price": 18.0,
+            "price_note": null
+          },
+          {
+            "size": "L",
+            "temperature": "iced",
+            "price": 20.0,
+            "price_note": null
+          }
+        ]
+      },
+      "canonical_name": "vienna latte"
+    },
+    "source-13:0": {
+      "reason": "Source 13 names einspanner and explicitly describes iced black coffee.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": null,
+            "price_note": null
+          }
+        ],
+        "name": "einspanner",
+        "description": "Iced black coffee from our seasonal coffee topped with creamy cheese foam."
+      },
+      "canonical_name": "einspanner"
+    },
+    "source-06:3": {
+      "reason": "Branding, not a sellable drink.",
+      "exclude": true
+    },
+    "source-07:0": {
+      "reason": "Restore the product name printed in the OCR transcription.",
+      "set": {
+        "name": "dirty earl"
+      }
+    },
+    "source-08:0": {
+      "reason": "Coconut series is a group description, not a product; the attached prices were misassigned.",
+      "exclude": true
+    },
+    "source-08:1": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:2": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:3": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-08:4": {
+      "reason": "Membership from the source heading.",
+      "series": [
+        "Coconut series"
+      ]
+    },
+    "source-09:6": {
+      "reason": "Optional extra already represented in addons; not a standalone drink.",
+      "exclude": true
+    },
+    "source-09:7": {
+      "reason": "Optional extra already represented in addons; not a standalone drink.",
+      "exclude": true
+    },
+    "source-12:0": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 22.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-12:1": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 23.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-12:2": {
+      "reason": "User confirmed that every drink in source 12 is iced.",
+      "set": {
+        "variants": [
+          {
+            "size": null,
+            "temperature": "iced",
+            "price": 23.0,
+            "price_note": null
+          }
+        ],
+        "section": "Raya specials"
+      },
+      "authority": "user"
+    },
+    "source-14:4": {
+      "reason": "Hot and iced are variants of mocha.",
+      "canonical_name": "mocha",
+      "set": {
+        "description": null
+      },
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:5": {
+      "reason": "Hot and iced are variants of mocha.",
+      "canonical_name": "mocha",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:0": {
+      "reason": "Column headings are not a product description.",
+      "set": {
+        "description": null
+      },
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:0": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:1": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:3": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-09:4": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:1": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    },
+    "source-14:2": {
+      "reason": "Price table alignment remains unverified.",
+      "issues": [
+        "Size/price alignment or missing prices require checking against the image."
+      ]
+    }
+  },
+  "sources": [
+    {
+      "source_id": "source-01",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.02 PM (1).jpeg",
+      "image_sha256": "8a68d768b6645960aa9b1c45c734e6ab223d5397243587569b29cdaae1b9644e",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.02 PM (1).jpeg.json"
+    },
+    {
+      "source_id": "source-02",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.02 PM (2).jpeg",
+      "image_sha256": "0aaa80cf7f9e3b93d105ca4856fabaa7b59d4ac0239930dc840f57a4af10ab19",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.02 PM (2).jpeg.json"
+    },
+    {
+      "source_id": "source-03",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.02 PM.jpeg",
+      "image_sha256": "355008849fd896e49943bce507afade6c93c5b0d68e723be30f1b68d1978fa1e",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.02 PM.jpeg.json"
+    },
+    {
+      "source_id": "source-04",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.03 PM (1).jpeg",
+      "image_sha256": "2500496c4d8031bb9929fd60454b99b89d363bf8b59e460020a4923a2ff63080",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.03 PM (1).jpeg.json"
+    },
+    {
+      "source_id": "source-05",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.03 PM (2).jpeg",
+      "image_sha256": "59c7481ef2e7eddca908b0b8e96414efa77ac128e2fa19542f18c1ee57025de2",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.03 PM (2).jpeg.json"
+    },
+    {
+      "source_id": "source-06",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.03 PM.jpeg",
+      "image_sha256": "3de28dbbfbce1b2bb5ec0489db10195f67019d1a16e52e8bc22ff96c1f6766c0",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.03 PM.jpeg.json"
+    },
+    {
+      "source_id": "source-07",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.04 PM (1).jpeg",
+      "image_sha256": "16cf0007cec188c3ef828c269a8e6cbaf51e9e7b035d2c3fec726e2ffaebfdc3",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.04 PM (1).jpeg.json"
+    },
+    {
+      "source_id": "source-08",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.04 PM (2).jpeg",
+      "image_sha256": "60205f2157dafc176ba3aa3f6c52c7be67cec0448b80329a8bf11bd045cc1dc3",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.04 PM (2).jpeg.json"
+    },
+    {
+      "source_id": "source-09",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.04 PM (3).jpeg",
+      "image_sha256": "9ddc950b3dd66394042e809f0deac2c641b2d510963b0c64ce5742e7c2a6e2ca",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.04 PM (3).jpeg.json"
+    },
+    {
+      "source_id": "source-10",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.04 PM.jpeg",
+      "image_sha256": "dc25ac549c62be9accbc9603ff974f24e5d6fb6ccdb779383cc953accfc40fac",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.04 PM.jpeg.json"
+    },
+    {
+      "source_id": "source-11",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.05 PM (1).jpeg",
+      "image_sha256": "ba23d95cf73e5919715136b77474285e511a0126f535fb32f65cd4350dbdd4ab",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.05 PM (1).jpeg.json"
+    },
+    {
+      "source_id": "source-12",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.05 PM (2).jpeg",
+      "image_sha256": "c932f08d4db60d477820d59bec7a8a0fe9d24f83d097e9fe972a82eff96016da",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.05 PM (2).jpeg.json"
+    },
+    {
+      "source_id": "source-13",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.05 PM.jpeg",
+      "image_sha256": "55ebe93fed651aabb23bacc7778c9dfa8c21dc0791773ea0c9c167da00810a3e",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.05 PM.jpeg.json"
+    },
+    {
+      "source_id": "source-14",
+      "image_file": "C:/Users/User/Desktop/CoffeeAssistant/image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg",
+      "image_sha256": "3417f43b49ddacf05516899273727bef0187ebef405035558f63744a808fef7c",
+      "ocr_file": "data/qwen-ocr/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg.json"
+    }
+  ],
+  "notes": [
+    "Catalog combines overlapping source records; original structure.json is preserved.",
+    "Review decisions are based on OCR text and user feedback, not a full image verification.",
+    "Series descriptions describe the group; they are not a list of ingredients in every drink.",
+    "Missing values and unresolved variants remain unknown. Do not treat draft prices as verified.",
+    "Add-on scope is inherited from the model and still requires review."
+  ]
+}
