@@ -1,96 +1,104 @@
-# Qwen menu image extraction
+# Qwen setup and menu image transcription
 
-The active model is `qwen3-vl:4b-instruct`, the quantized Ollama distribution of
-Qwen3-VL-4B-Instruct. It reads images directly; RapidOCR is no longer used by the
-extractor. We use Ollama for local inference on this Windows machine instead of
-loading the unquantized Hugging Face weights with Transformers.
+The pipeline uses `qwen3-vl:4b-instruct` to transcribe images, followed by
+`qwen3:4b-instruct-2507-q4_K_M` to generate the consolidated menu from all OCR
+text. Both run locally through Ollama. Prepare and test the code on this laptop;
+download and run the models on the model-capable PC.
 
-References: [model](https://ollama.com/library/qwen3-vl:4b-instruct),
-[Windows runtime](https://docs.ollama.com/windows),
-[structured vision output](https://docs.ollama.com/capabilities/structured-outputs).
+## Python setup
 
-## Setup
-
-The current workspace has a Python virtual environment and a portable Ollama
-runtime under `.tools/ollama/`. On another machine, install Python 3.12 and run:
+Install Python 3.12, then run from the project directory:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Download the official `ollama-windows-amd64.zip` from the
-[Ollama v0.33.3 release](https://github.com/ollama/ollama/releases/tag/v0.33.3)
-and extract it so `.tools/ollama/ollama.exe` exists. Include the bundled GPU
-libraries. Alternatively, use an existing Ollama installation and pass its local
-address through `--ollama-url`; ensure the specified model is pulled there first.
+Create a new virtual environment on the other PC instead of copying `.venv`.
+Copy the source project and `image/`; also copy `data/qwen-ocr/` if you want to
+reuse earlier OCR. OCR results and model weights are ignored by Git and will
+not be present in a fresh clone.
+
+## Ollama setup
+
+Choose either a normal Ollama installation or the project's portable helper.
+See the official [Ollama Windows guide](https://docs.ollama.com/windows) for
+installation and the standalone archive.
+
+For a normal installation, start Ollama and download both model tags:
 
 ```powershell
-.\scripts\start-qwen.ps1 -PullModel
-.\.venv\Scripts\python.exe -m app.services.ocr --input image
+ollama pull qwen3-vl:4b-instruct
+ollama pull qwen3:4b-instruct-2507-q4_K_M
+.\scripts\run-menu-pipeline.ps1 -OllamaUrl http://127.0.0.1:11434
 ```
 
-The helper starts a hidden local server at `127.0.0.1:11435`, stores model weights
-in `.tools/ollama-models/`, and limits parallelism to one image. Model downloads
-need internet access and several GB of disk space. Once cached, image inference
-is local and does not need an API key. The helper leaves the server running;
-the model is set to unload after ten idle minutes. Server logs live in `.tools/`.
-
-## Commands
+For the portable setup, extract the official Windows archive so
+`.tools/ollama/ollama.exe` and its bundled GPU libraries exist. Then run:
 
 ```powershell
+.\scripts\start-qwen.ps1 -PullModel -PullTextModel
+.\scripts\run-menu-pipeline.ps1
+```
+
+The helper starts a hidden local server at `127.0.0.1:11435`, stores weights
+in `.tools/ollama-models/`, and limits parallel requests and loaded models to one.
+Downloads require internet access and disk space. Once the weights are present,
+the local pipeline does not require an API key. Server logs live in `.tools/`;
+the helper leaves the server running.
+
+The pipeline wrapper does not install Ollama, download models, or start the
+server. On later runs, start the portable server with
+`.\scripts\start-qwen.ps1`, or use the running normal installation and its URL.
+
+## Run OCR independently
+
+```powershell
+# All images in the image folder
+.\.venv\Scripts\python.exe -m app.services.ocr --input image
+
 # One image
 .\.venv\Scripts\python.exe -m app.services.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg"
 
 # Existing Ollama installation using its usual port
 .\.venv\Scripts\python.exe -m app.services.ocr --ollama-url http://127.0.0.1:11434
 
-# Save an experiment separately
+# A separate output folder for an experiment
 .\.venv\Scripts\python.exe -m app.services.ocr --output data/qwen-ocr/experiment-2
 
-# Tests (mock inference; no model download)
+# Automated tests use mock inference; no model is loaded
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
 Inputs are a single image or a nonrecursive folder. Supported extensions are
-JPEG, PNG, WebP, BMP and TIFF. Only the first page/frame is read. EXIF orientation
-is applied before encoding the RGB image for Ollama. Images are not intentionally
-resized by this application; the model runtime performs its own preprocessing.
+JPEG, PNG, WebP, BMP, and TIFF. Only the first page or frame is read. EXIF
+orientation is applied before encoding an RGB image. This application does not
+intentionally resize images; the runtime performs its own preprocessing.
 
-Inference uses temperature 0, an 8,192-token context, and up to 4,096 generated
-tokens. Each image has a configurable `--timeout` of 600 seconds by default.
-Truncated responses, malformed JSON and server errors fail explicitly. The
-script continues other images and exits nonzero if any failed.
+OCR defaults to temperature 0, `--num-ctx 8192`, `--num-predict 4096`, and
+`--timeout 600` seconds per image. The wrapper exposes these as `-OcrNumCtx`,
+`-OcrNumPredict`, and `-OcrTimeout`. The separate menu-generation step has a
+larger context and output budget; see [menu generation](menu-structure.md).
 
-## Output and scope
+Truncated responses, malformed JSON, and server errors fail explicitly. OCR
+continues processing the remaining images and exits nonzero if any failed. The
+wrapper stops before menu generation when OCR fails.
 
-`data/qwen-ocr/` contains one JSON and TXT per image. `summary.json` records the
-latest run, including failures. Repeated runs overwrite successful results for
-matching filenames; old results are not deleted if a later run fails. Use the
-summary to identify current successes, or choose a fresh output directory.
+## Output and limitations
 
-Schema version 2 contains a transcription string, model uncertainty notes,
-source image/hash, model tag/digest, duration, and `verified: false`. The prompt
-requests Markdown tables to retain row/column structure, but the model may still
-return plain text rows. No box coordinates are invented.
-The model can still misplace prices, omit words, or hallucinate. Pydantic checks
-the response shape, not whether it matches the image. Empty uncertainty notes
-are not a correctness guarantee.
+`data/qwen-ocr/` contains one JSON file per image. `summary.json` records the
+latest run and any failures. Repeated runs overwrite successful results for
+matching filenames; old results can remain when a later attempt fails. The
+menu generator uses the summary to determine the current batch and rejects
+failed batches. Use a fresh output directory for a separate experiment.
 
-## Initial runtime check
+OCR schema version 2 contains transcription, model uncertainty notes, source
+image and hash, model tag and digest, duration, and `verified: false`. The prompt
+requests Markdown tables to retain layout. It does not invent measured bounding
+boxes or calibrated confidence scores.
 
-The first complete Qwen batch processed all 14 supplied images with zero request
-failures, taking 84.4 seconds with the model already loaded. All 14 unit tests
-passed. These are runtime/schema checks, not OCR accuracy measurements.
-
-On this machine, Ollama 0.33.3 detected the GTX 1070 Ti (8 GB) through its CUDA 12
-backend. The first full menu request completed in approximately 47 seconds,
-including startup. This establishes that inference runs, not that extraction is
-accurate. A spot-check found incorrect price-row associations: the first output
-attached matcha's iced `20.0` to 5oz rather than 8oz and misaligned mocha prices.
-It also returned plain rows despite the request for Markdown tables. Keep these
-limitations visible when designing the later extraction/verification stage.
-
-The previous `app/models/ocr.py`, verifier and tests remain as legacy material.
-The old `data/ocr/` results have been deleted. The legacy verifier is not used to verify Qwen output. Verification is
-deliberately deferred; the new extractor never auto-approves its output.
+OCR can omit words, misread digits, or misalign price columns. Schema validation
+does not check agreement with the image, and empty uncertainty notes do not
+establish correctness. The menu-generation model reads this OCR evidence; it
+cannot reliably recover information already lost during transcription. Inspect
+the images and generated menu before evaluating customer-facing answers.

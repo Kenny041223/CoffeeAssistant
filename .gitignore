@@ -2,9 +2,6 @@
 __pycache__/
 *.py[cod]
 .env
-data/ocr/
-data/verification/
-data/references/
 data/qwen-ocr/
 .tools/
-data/structure-cache/
+data/structure-runs/

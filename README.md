@@ -1,442 +1,115 @@
-# ☕ Coffee Shop AI Customer Service Agent
+# Coffee Shop AI Customer Service Agent
 
-An AI-powered customer service system designed to answer coffee shop customers' questions about menu items, prices, recommendations, store information, and other frequently asked questions.
+A portfolio project that turns coffee shop menu images into structured data for
+a future customer service assistant. The current implementation focuses on local
+Qwen inference, structured output validation, and traceable extraction.
 
-The project combines **backend software engineering, Large Language Models (LLMs), Retrieval-Augmented Generation (RAG), structured data extraction, and AI tool calling** to explore how AI can automate real-world customer service workflows.
+## Current implementation
 
-> **Project Status:** 🚧 In Development
+```text
+Menu images
+    -> Qwen3-VL transcribes each image
+    -> Qwen text model reads the complete OCR batch
+       and generates one consolidated menu
+    -> Python validates, attaches provenance, and saves structure.json
+```
 
-### Current milestone — Qwen OCR and structured menu extraction
+**Qwen generates the menu content:** product identities, descriptions, variants,
+aliases, source evidence, uncertainty notes, and `search_text`. It sees the OCR
+from all images together so a price-list entry and a description poster can
+contribute to the same product. Python supplies the schema and checks the
+response, adds IDs and run metadata, and writes the final file. It does not
+merge products or fill in menu facts after generation.
 
-The active extractor uses **Qwen3-VL-4B-Instruct**, running locally through
-Ollama. It transcribes menu images into text (including Markdown tables) inside
-Pydantic-validated JSON. A second text-only Qwen step maps those transcriptions
-into menu items, variants and add-ons using one shared schema. No API key is required.
+`structure.json` is the only final menu dataset. OCR files and generation logs
+are retained as evidence. There is no separate menu catalog or manual correction
+file in the active pipeline.
 
-From this project directory:
+**Validation status:** the revised pipeline is prepared for a model-capable PC.
+Its automated tests use mock model responses; this revision has not yet been
+run end to end with Qwen. No generated menu is shipped as proof of such a run.
+Extraction accuracy and semantic retrieval quality are still unmeasured.
+
+## Run on the model-capable PC
+
+Install Python 3.12 and set up Ollama using [the setup guide](docs/ocr.md). From
+the project directory:
 
 ```powershell
-# Start the local runtime; download the model if needed
-.\scripts\start-qwen.ps1 -PullModel
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-# Transcribe the image folder
-.\.venv\Scripts\python.exe -m app.services.ocr --input image
+# Portable Ollama setup: start the server and download both models once
+.\scripts\start-qwen.ps1 -PullModel -PullTextModel
 
-# Download the text model once, then generate structure.json
-.\scripts\start-qwen.ps1 -PullTextModel
-.\.venv\Scripts\python.exe -m app.services.structure_menu
+# Images -> OCR -> model-generated structure.json
+.\scripts\run-menu-pipeline.ps1
 ```
 
-Results are saved in `data/qwen-ocr/` as `.json` and `.txt`, with a batch
-`summary.json`. Each JSON includes the model digest, source hash, transcription,
-uncertainty notes, duration and `verified: false`. Qwen does not provide measured
-bounding boxes or calibrated OCR confidence scores; those fields are not fabricated.
+The defaults are `qwen3-vl:4b-instruct` for OCR and
+`qwen3:4b-instruct-2507-q4_K_M` for menu generation. The wrapper expects Ollama
+to be running and stops if either pipeline stage fails.
 
-See [Qwen setup and usage](docs/ocr.md) for fresh installation and single-image commands.
-RapidOCR and ONNX Runtime are no longer required by the active extractor.
+```powershell
+# Reuse existing OCR files and run only menu generation
+.\scripts\run-menu-pipeline.ps1 -SkipOcr
 
-`structure.json` is an LLM-generated draft grouped by source image. Each entry has
-name, category, section, description and size/temperature/price variants. Original
-transcriptions are attached by Python. Missing values are `null`; add-ons are separate. The default currency is
-unspecified; use `--currency MYR` when that currency has been confirmed. See
-[the structuring workflow](docs/menu-structure.md) for schema and behavior.
+# Existing Ollama installation using its usual port
+.\scripts\run-menu-pipeline.ps1 -OllamaUrl http://127.0.0.1:11434
 
-**Verification is deferred.** The previous verifier remains available for old
-RapidOCR schema version 1 only. It is not connected to Qwen schema version 2.
+# Supply currency only when confirmed from the menu or shop
+.\scripts\run-menu-pipeline.ps1 -SkipOcr -Currency MYR
 
----
+# This laptop: inspect the real prompt/schema/input without loading any model
+# Requires existing OCR JSON in data/qwen-ocr/
+.\scripts\run-menu-pipeline.ps1 -PrepareOnly
 
-## 📌 Problem
+# Mock inference tests; no model download or server required
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
 
-Coffee shop staff frequently answer repetitive customer questions such as:
+`-PrepareOnly` skips OCR, saves the actual generation request artifacts, and
+does not create `structure.json`. See [menu generation](docs/menu-structure.md)
+for schema details, validation, run evidence, and memory-related options.
 
-- What drinks are available?
-- Which drinks are below a certain price?
-- Do you have non-coffee drinks?
-- What would you recommend if I don't like sweet drinks?
-- What are the store opening hours?
-- Are there any current promotions?
+## Why one record per product
 
-Answering these questions manually takes staff time, especially during busy periods.
+Repeated menu photos should contribute evidence to a shared product instead of
+creating repeated search results. The Qwen prompt asks for one record per
+product, retaining separate identities for distinct blends or similarly named
+drinks. Python rejects detectable duplicate identities and invalid references,
+then asks Qwen to correct its response once. This catches structural problems;
+it does not prove that every model merge is factually correct.
 
-This project aims to build an AI customer service system capable of answering these questions using actual store information while reducing hallucinations and maintaining reliable responses.
+Each product contains model-generated `search_text` for a future embedding,
+alongside exact price variants and source references. A later retrieval layer
+can embed that text once per product and use its ID to retrieve structured
+prices. Numeric price constraints need structured filters. No embeddings or
+vector database are created by this pipeline.
 
----
-
-## 🎯 Project Goals
-
-The goal is not simply to build a chatbot.
-
-The project aims to explore how an AI system can be integrated into a real software architecture while considering:
-
-- response accuracy
-- hallucination prevention
-- structured data extraction
-- retrieval quality
-- tool usage
-- API design
-- latency
-- LLM usage cost
-- error handling
-- evaluation
-- deployment
-
----
-
-## 🏗️ Planned Architecture
+## Project layout
 
 ```text
-Customer
-   │
-   ▼
-Messaging Interface / Web Client
-   │
-   ▼
-FastAPI Backend
-   │
-   ▼
-AI Orchestrator
-   │
-   ├── Menu Database
-   │
-   ├── RAG Pipeline
-   │      ├── Embeddings
-   │      └── Vector Database
-   │
-   ├── Agent Tools
-   │      ├── Search Menu
-   │      ├── Store Information
-   │      └── Promotions
-   │
-   └── LLM
-          │
-          ▼
-     Generated Response
+app/models/                  OCR and final menu schemas
+app/services/ocr.py           Image transcription through Ollama
+app/services/structure_menu.py Batch menu generation, validation, and saving
+scripts/start-qwen.ps1        Portable Ollama setup helper
+scripts/run-menu-pipeline.ps1 Pipeline entry point
+tests/                       Automated tests with mock inference
+docs/                        Setup and extraction workflow
+image/                       Input menu images
+data/qwen-ocr/                Local OCR evidence, generated at runtime
+data/structure-runs/          Local prompts, responses, and run manifests
+structure.json               Final menu, created after a successful model run
 ```
 
----
-
-## 🧠 Planned Features
-
-### 1. Menu Image Extraction
-
-The existing coffee shop menu will be converted from an image into structured data using OCR and/or a vision-capable AI model.
-
-```text
-Menu Image
-    ↓
-OCR / Vision Model
-    ↓
-Structured Extraction
-    ↓
-Pydantic Validation
-    ↓
-JSON
-    ↓
-Database
-```
-
-Example output:
-
-```json
-{
-  "name": "Iced Matcha Latte",
-  "category": "non_coffee",
-  "price": 13.90,
-  "temperature_options": ["iced"],
-  "description": "Matcha with milk"
-}
-```
-
----
-
-### 2. Menu API
-
-FastAPI will expose REST endpoints for accessing menu information.
-
-Planned endpoints include:
-
-```http
-GET /menu
-GET /menu/{item_id}
-GET /menu?category=coffee
-GET /menu?max_price=15
-```
-
----
-
-### 3. AI Customer Assistant
-
-Customers will be able to ask questions using natural language.
-
-Example:
-
-```text
-Customer:
-I want something cold without coffee under RM15.
-
-Assistant:
-Based on the available menu, here are some options...
-```
-
-The AI system will determine what information is required and retrieve relevant data before generating its response.
-
----
-
-### 4. Retrieval-Augmented Generation (RAG)
-
-Unstructured store knowledge may include:
-
-- FAQs
-- store information
-- product descriptions
-- promotions
-- policies
-- other relevant documents
-
-Documents will be converted into embeddings and stored in a vector database.
-
-```text
-Customer Question
-       ↓
-Embedding
-       ↓
-Vector Search
-       ↓
-Relevant Context
-       ↓
-LLM
-       ↓
-Grounded Response
-```
-
-This allows the model to retrieve relevant information instead of placing the entire knowledge base into every prompt.
-
----
-
-### 5. AI Tool Calling
-
-The AI assistant will have access to controlled application functions.
-
-Potential tools include:
-
-```python
-search_menu()
-get_product_details()
-get_store_hours()
-get_current_promotions()
-check_item_availability()
-```
-
-The LLM will decide when a tool is required, while the backend remains responsible for executing the actual operation.
-
----
-
-### 6. Evaluation
-
-The project will include an evaluation dataset containing realistic customer questions.
-
-Examples:
-
-```text
-"What drinks are below RM10?"
-"Do you have anything without coffee?"
-"What time does the store close?"
-"Recommend something that isn't too sweet."
-"What promotions are available?"
-"Do you sell pizza?"
-```
-
-Potential evaluation metrics include:
-
-- answer accuracy
-- retrieval accuracy
-- tool selection accuracy
-- hallucination rate
-- response latency
-- average LLM cost per request
-
-Evaluation results will be added once the system has been implemented and tested.
-
----
-
-## 🛠️ Planned Technology Stack
-
-### Backend
-
-- Python
-- FastAPI
-- Pydantic
-
-### AI
-
-- Large Language Model API
-- Embeddings
-- Retrieval-Augmented Generation (RAG)
-- Tool / Function Calling
-
-### Database
-
-- Pinecone
-- Vector database
-
-### Infrastructure
-
-- Docker
-- Cloud deployment
-
-### Future Integration
-
-- Messaging platform / social media API
-
----
-
-## 📂 Proposed Project Structure
-
-```text
-coffee-ai-agent/
-│
-├── app/
-│   ├── api/
-│   │   ├── chat.py
-│   │   ├── menu.py
-│   │   └── webhook.py
-│   │
-│   ├── agents/
-│   │   ├── customer_agent.py
-│   │   └── tools.py
-│   │
-│   ├── rag/
-│   │   ├── embeddings.py
-│   │   ├── retrieval.py
-│   │   └── ingestion.py
-│   │
-│   ├── models/
-│   ├── services/
-│   ├── database/
-│   └── main.py
-│
-├── evaluation/
-├── tests/
-├── docs/
-│   └── architecture.md
-│
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
-
-The project structure may change as development progresses.
-
----
-
-## 🚀 Development Roadmap
-
-### Phase 1 — Menu Data Pipeline
-
-- [x] Collect menu image
-- [x] Implement and run a local OCR baseline
-- [x] Extract menu information (LLM draft)
-- [x] Convert extracted information into structured JSON
-- [x] Validate data structure using Pydantic
-- [ ] Store menu data
-- [ ] Build menu REST API
-
-### Phase 2 — AI Assistant
-
-- [ ] Create `/chat` endpoint
-- [ ] Integrate LLM API
-- [ ] Implement structured responses
-- [ ] Connect assistant with menu data
-
-### Phase 3 — RAG
-
-- [ ] Prepare store knowledge base
-- [ ] Generate embeddings
-- [ ] Configure vector database
-- [ ] Implement retrieval pipeline
-- [ ] Ground responses using retrieved context
-
-### Phase 4 — Tool Calling
-
-- [ ] Implement agent tools
-- [ ] Connect tools to backend services
-- [ ] Handle tool calls
-- [ ] Add tool error handling
-
-### Phase 5 — Evaluation & Production Engineering
-
-- [ ] Create evaluation dataset
-- [ ] Measure response accuracy
-- [ ] Measure hallucination rate
-- [ ] Measure latency
-- [ ] Track LLM token usage and cost
-- [ ] Add logging
-- [ ] Add error handling and retries
-- [ ] Containerize application with Docker
-
-### Phase 6 — Deployment & Integration
-
-- [ ] Deploy backend
-- [ ] Connect messaging platform
-- [ ] Add webhook integration
-- [ ] Perform end-to-end testing
-
----
-
-## 📊 Results
-
-Evaluation results will be published here after implementation.
-
-| Metric | Result |
-|---|---|
-| Answer Accuracy | TBD |
-| Tool Selection Accuracy | TBD |
-| Retrieval Accuracy | TBD |
-| Hallucination Rate | TBD |
-| Average Response Latency | TBD |
-| Average LLM Cost / Request | TBD |
-
----
-
-## 💡 Engineering Questions
-
-Throughout development, this project will explore questions such as:
-
-- When should structured SQL queries be used instead of vector retrieval?
-- Which information should be stored as structured data versus embedded documents?
-- How can hallucinations be detected or reduced?
-- When should the LLM call a tool instead of answering directly?
-- How should the system behave when required information is unavailable?
-- How can retrieval quality be evaluated?
-- What trade-offs exist between response quality, latency, and cost?
-- When should a human review an AI-generated response?
-
-These decisions and findings will be documented as the project evolves.
-
----
-
-## ⚠️ Current Limitations
-
-This project is currently under active development.
-
-Features and architecture described above represent the planned direction of the system and may change as technical requirements and real-world constraints are discovered.
-
----
-
-## 📖 What I Hope to Learn
-
-This project is being developed to strengthen practical experience in:
-
-- AI application engineering
-- backend API development
-- LLM integration
-- RAG systems
-- AI agents and tool calling
-- database design
-- AI evaluation
-- production deployment
-- software architecture
-
-The long-term objective is to understand not only how to call an LLM API, but how to design, evaluate, and deploy a reliable AI-powered software system.
+## Next milestones
+
+- Run the revised pipeline on the model-capable PC and inspect its saved evidence.
+- Review generated names, price mappings, identity merges, and unresolved issues
+  against the original images.
+- Evaluate expected product matches and duplicate handling with a small query set.
+- Add an embedding index and structured menu lookup, then expose a FastAPI API.
+- Build the customer assistant, controlled tool calls, and answer-quality evaluation.
+
+The API, customer assistant, vector database, and deployment are planned work.

@@ -41,13 +41,23 @@ def find_images(source: Path) -> list[Path]:
 
 
 class QwenEngine:
-    def __init__(self, base_url: str, model: str, timeout: float):
+    def __init__(self, base_url: str, model: str, timeout: float, *,
+                 num_ctx: int = 8192, num_predict: int = 4096):
         parsed = urlparse(base_url)
         if parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1", "::1"}:
             raise ValueError("Ollama URL must be an HTTP loopback address")
+        if type(num_ctx) is not int or num_ctx <= 0:
+            raise ValueError("num_ctx must be a positive integer")
+        if type(num_predict) is not int or num_predict <= 0:
+            raise ValueError("num_predict must be a positive integer")
+        if num_predict >= num_ctx:
+            raise ValueError("num_predict must be smaller than num_ctx to leave room for the prompt")
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
+        self.num_ctx = num_ctx
+        self.num_predict = num_predict
+        self.last_generation: dict[str, int] = {}
         self.session = requests.Session()
         self.session.trust_env = False
         response = self.session.get(f"{self.base_url}/api/tags", timeout=(5, 10))
@@ -70,11 +80,12 @@ class QwenEngine:
 
     def generate_json(self, messages: list[dict], schema: dict | str) -> str:
         """Shared local inference transport for image OCR and text structuring."""
+        self.last_generation = {}
         response = self.session.post(f"{self.base_url}/api/chat", json={
             "model": self.model, "stream": False,
             "messages": messages,
             "format": schema,
-            "options": {"temperature": 0, "num_ctx": 8192, "num_predict": 4096},
+            "options": {"temperature": 0, "num_ctx": self.num_ctx, "num_predict": self.num_predict},
             "keep_alive": "10m",
         }, timeout=(5, self.timeout))
         if response.status_code != 200:
@@ -84,7 +95,12 @@ class QwenEngine:
             raise ValueError(f"Ollama error: {body['error']}")
         if body.get("done") is not True or body.get("done_reason") != "stop":
             raise ValueError("Qwen output was incomplete or reached its token limit; no result saved")
-        return body["message"]["content"]
+        content = body["message"]["content"]
+        self.last_generation = {key: body[key] for key in (
+            "prompt_eval_count", "eval_count", "total_duration", "load_duration",
+            "prompt_eval_duration", "eval_duration",
+        ) if key in body}
+        return content
 
 
 def extract_image(engine, source: Path) -> QwenDocument:
@@ -105,7 +121,6 @@ def extract_image(engine, source: Path) -> QwenDocument:
 def write_result(document: QwenDocument, output: Path, filename: str) -> None:
     output.mkdir(parents=True, exist_ok=True)
     (output / f"{filename}.json").write_text(document.model_dump_json(indent=2), encoding="utf-8")
-    (output / f"{filename}.txt").write_text(document.transcription + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -115,6 +130,8 @@ def main() -> int:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11435")
     parser.add_argument("--timeout", type=float, default=600, help="Seconds per image")
+    parser.add_argument("--num-ctx", type=int, default=8192, help="Ollama context window in tokens")
+    parser.add_argument("--num-predict", type=int, default=4096, help="Maximum generated tokens per image")
     args = parser.parse_args()
     if not 0 < args.timeout < float("inf"):
         parser.error("Timeout must be a positive finite number")
@@ -123,7 +140,8 @@ def main() -> int:
     except ValueError as exc:
         parser.error(str(exc))
     try:
-        engine = QwenEngine(args.ollama_url, args.model, args.timeout)
+        engine = QwenEngine(args.ollama_url, args.model, args.timeout,
+                            num_ctx=args.num_ctx, num_predict=args.num_predict)
     except Exception as exc:
         print(f"Cannot initialize local Qwen: {exc}\nStart it with scripts/start-qwen.ps1 -PullModel", file=sys.stderr)
         return 1

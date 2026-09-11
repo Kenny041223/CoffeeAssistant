@@ -1,94 +1,167 @@
-# Generate structure.json with an LLM
+# Generate structure.json with Qwen
 
-The pipeline uses the local Qwen3-4B-Instruct-2507 text model
-(`qwen3:4b-instruct-2507-q4_K_M`). OCR still uses Qwen3-VL-4B-Instruct.
-The text model needs a separate one-time download; no training or API key is needed.
-
-The initial complete run generated a draft with 48 item records from 14 source
-documents. These are model-produced records, not a count of verified unique
-products. All 23 unit tests passed. Some headings/branding and add-on rows were
-misclassified as products during inspection, so schema success is not content
-approval. Those interpretation checks remain separate from file generation.
+The text model reads the complete OCR batch and generates a single menu in one
+structured response. It decides which image occurrences describe the same
+product, combines their supported details, and writes the product search text.
+Python validates that response and adds identifiers and provenance before saving
+`structure.json` (schema version 3).
 
 ```text
-Qwen OCR JSON -> transcription -> Qwen fills one menu schema
-             -> Pydantic validation -> structure.json (draft)
+All Qwen OCR JSON files
+    -> shared prompt + Pydantic JSON schema
+    -> Qwen generates products, series, add-ons, and source notes together
+    -> validate; request one correction if needed
+    -> attach IDs, original OCR sources, and generation metadata
+    -> atomically save structure.json
 ```
 
-The LLM handles interpretation of different source layouts. Python handles input
-loading, validation, provenance and file writing. There are no image-specific or
-menu-specific parsers. The schema is in `app/models/menu.py`; the shared extraction
-prompt and batch runner are in `app/services/structure_menu.py`.
-
-The text step uses JSON mode with a shape example, followed by Pydantic validation.
-The OCR step still uses its original schema-constrained image request. The shared
-prompt explains line-wrapped names and optional extras.
+This revision is ready to run on the model-capable PC. Tests exercise mocked
+inference; the revised batch generation has not yet been run with a real model.
+No accuracy or duplicate-removal results are claimed before that evaluation.
 
 ## Run
 
-```powershell
-.\scripts\start-qwen.ps1 -PullTextModel
-.\.venv\Scripts\python.exe -m app.services.structure_menu
+Set up the models using [the OCR guide](ocr.md). The PowerShell wrapper runs OCR
+first and stops if it fails:
 
-# Explicit currency and custom output, if desired
-.\.venv\Scripts\python.exe -m app.services.structure_menu --currency MYR --output data/structured/menu.json
+```powershell
+.\scripts\run-menu-pipeline.ps1
+
+# Reuse existing OCR without loading the vision model
+.\scripts\run-menu-pipeline.ps1 -SkipOcr
+
+# Confirmed currency is optional metadata
+.\scripts\run-menu-pipeline.ps1 -SkipOcr -Currency MYR
 ```
 
-The default input is `data/qwen-ocr/`, and the default output is `structure.json`
-in the working directory. The generator respects the latest OCR `summary.json`,
-rejects a batch with failures, and loads only the documents listed as processed.
-If a folder has no summary, it reads its JSON files as Qwen OCR documents.
+The menu step can also run directly:
 
-## Structure
+```powershell
+.\.venv\Scripts\python.exe -m app.services.structure_menu
 
-- Document metadata: model, model digest, prompt version, source count, item
-  occurrence count and explicitly configured currency (otherwise `null`).
-- `sources`: image and OCR filenames/hashes, the original transcription, and
-  existing OCR uncertainty notes. Python attaches these without model rewriting.
-- Each source's `menu.items`: name, printed category/section, description,
-  variants and notes about missing or ambiguous information.
-- Each variant: size, temperature (`hot`, `iced` or `null`), price and optional
-  price condition. Prices are JSON numbers. Missing prices remain `null`.
-- `menu.addons`: extra shot, oat milk and other surcharges kept separate from
-  menu-item base prices, with an `applies_to` list when the text makes scope clear.
+# Custom input, output, and an existing Ollama server
+.\.venv\Scripts\python.exe -m app.services.structure_menu --input data/qwen-ocr --output structure.json --ollama-url http://127.0.0.1:11434
 
-Multiple variants represent multiple size or temperature prices. A description-only
-product may have an empty variants list, or a variant with `price: null` when other
-variant details are explicit. A variable price such
-as filter coffee depending on origin uses `price_note` instead of an invented
-number. House blend and seasonal sections remain distinguishable.
+# Inspect the actual request without connecting to Ollama
+.\.venv\Scripts\python.exe -m app.services.structure_menu --prepare-only
+```
 
-Sources remain separate deliberately. A description poster and a price list may
-both mention the same drink; their occurrences are not yet a deduplicated menu
-database. Joining them by name alone can incorrectly combine different blends,
-sizes or recipes. The [catalog-building step](menu-catalog.md) now combines these
-records using explicit review decisions while preserving this raw extraction.
+The defaults are `data/qwen-ocr/` input, `structure.json` output, text model
+`qwen3:4b-instruct-2507-q4_K_M`, and Ollama at `http://127.0.0.1:11435`.
+`--currency MYR` supplies currency when confirmed; otherwise it remains `null`.
+The model is not asked to guess currency from the shop's location.
+
+`--prepare-only` requires existing OCR files. It validates the inputs and saves
+the prompt, schema, input snapshot, and manifest. It does not load a model or
+write a final menu. The wrapper's `-PrepareOnly` also skips the OCR stage.
+
+The loader respects the latest OCR `summary.json`, rejects a batch with failures,
+and loads only the documents listed as processed. Without a summary, the input
+folder must contain OCR JSON documents, not arbitrary JSON files.
+
+## What the model generates
+
+| Field | Meaning |
+|---|---|
+| `products` | One record per product identity; distinct context can distinguish matching names |
+| `name`, `context`, `aliases`, `category` | Product identification using supported OCR facts |
+| `description` | Combined description from sources that refer to the same product |
+| `variants` | Size, temperature, price, `price_note`, and supporting `source_ids` |
+| Product `series` | Names of the series that the product belongs to |
+| `source_ids` and `evidence` | Source references and exact OCR quotations supporting the record |
+| `issues` | Unresolved ambiguity or conflict that requires review |
+| `search_text` | Readable text generated by Qwen for future semantic retrieval |
+| Top-level `series` and `addons` | Separate group descriptions and optional extras |
+| `source_notes` | A source-by-source account of uncertainty or non-product content |
+
+Unknown description, size, temperature, or price values stay `null` where the
+schema allows it. Null does not mean free or unavailable. Price conditions remain
+in `price_note`. A description poster without a price should add information to
+the product, not create another purchasable variant with a guessed price.
+
+The prompt asks Qwen to combine repeated product information across images while
+keeping distinct products separate. Similar descriptions are insufficient
+evidence for a merge. Series-level toppings must not become ingredients of every
+member without supporting text. Conflicting prices and unclear table mappings
+should remain visible as issues instead of being resolved by guessing.
+
+Python does not apply a manual review file, merge records, repair product names,
+or compose descriptions or `search_text`. Menu content comes from the accepted
+Qwen response. It adds a deterministic `product_id` derived from the model's
+canonical name and context. If Qwen changes that identity on a later run, the ID
+can change too; a future index update must handle removed or changed products.
 
 ## Validation and failure behavior
 
-Pydantic rejects malformed records and negative/nonfinite prices. Original
-transcriptions and hashes are attached in Python so the model does not need to
-reproduce source quotations. This preserves provenance, not proof that the model
-assigned a price correctly. Empty extraction from nonempty menu text fails
-explicitly; empty OCR can produce an empty page with a note.
+The request supplies the Pydantic JSON schema through Ollama's `format` field,
+and the response is validated again locally. This follows Ollama's
+[structured output interface](https://docs.ollama.com/capabilities/structured-outputs).
+The request uses the local [`/api/chat` endpoint](https://docs.ollama.com/api/chat).
 
-Empty optional description/category/section/size strings are normalized to `null`.
-A single add-on applicability string is normalized to a one-element list, while
-an existing list is retained. These are generic formatting conversions, not
-image-specific parsers or corrections to prices.
+Validation checks the schema, valid price values, source references, duplicate
+product identities, aliases that collide with other product names, duplicate
+variants, and whether evidence quotations occur in their cited OCR text. Every
+input source must be represented in the source notes. Invalid model output can
+receive one correction request containing the validation errors. Persistent
+errors, incomplete responses, and runtime failures stop the run.
 
-The generator makes at most one corrective retry for invalid schema or empty
-extraction from nonempty menu text. Incomplete model responses also
-fail. `structure.json` is replaced only
-after the entire batch succeeds; on failure an existing file remains unchanged,
-and the command exits with code 1. No partial batch is published as complete.
+These checks catch detectable inconsistencies. They cannot prove that Qwen
+identified every product, assigned each price correctly, or merged only matching
+products. A valid quotation can still be attached to the wrong interpretation.
+Review the menu against the images before relying on its factual contents.
 
-Validated intermediate pages are cached in `data/structure-cache/`. The key
-includes the OCR JSON, model digest, prompt and output shape; cached pages are
-validated again on load. Use `--refresh` to regenerate them. An interrupted batch
-can therefore reuse earlier successful pages without repeating every model call.
+The previous `structure.json` is replaced atomically only after generation and
+validation succeed. A failed run leaves the previous output intact and exits
+with a nonzero code. There is no Python-generated fallback menu.
 
-OCR verification remains deferred. This step reads only OCR JSON, never rechecks
-the original images, and cannot recover layout or digits already lost by OCR.
-It also cannot prove that every product was extracted or that no product was
-misinterpreted. Test names and prices before using the data in customer responses.
+## Run evidence for the portfolio
+
+Each invocation creates a unique run folder under `data/structure-runs/`.
+`--run-dir PATH` changes that parent directory; it does not reuse an earlier run.
+The run artifacts include:
+
+- `inputs.json`: the OCR input used for the request.
+- `prompt.txt` and `schema.json`: the instructions and output contract.
+- Raw response files for model attempts, plus correction details when needed.
+- A manifest recording preparation, generation success, or failure.
+
+The final menu stores the OCR source transcriptions and metadata once, with the
+model's source notes. Its `generation` metadata identifies the model tag and
+digest, prompt version, input and response hashes, run directory, attempt count,
+generation time, token settings, and available runtime metrics.
+
+These files show which facts came from OCR, what Qwen returned, and what Python
+validated. They are provenance, not additional menu catalogs. Run artifacts are
+local and ignored by Git; select and review actual run evidence before including
+it in the portfolio. A prepared manifest demonstrates request construction only,
+not a successful model run.
+
+## Context and memory
+
+The menu step defaults to `--num-ctx 32768`, `--num-predict 12288`, and
+`--timeout 900` seconds. These are runtime settings, not tested hardware sizing
+or quality guarantees. A larger context and output allowance require more memory.
+
+```powershell
+# Adjust only to settings supported by the other PC and chosen model
+.\scripts\run-menu-pipeline.ps1 -SkipOcr -NumCtx 32768 -NumPredict 12288 -Timeout 1200
+```
+
+The pipeline is intended for a small menu whose complete OCR and output fit in
+one request. Context-budget errors fail explicitly. Reducing output tokens can
+truncate a detailed menu; raising the timeout only helps slow inference, not
+insufficient memory. For substantially larger menus, a future pipeline will need
+separate extraction batches followed by a model consolidation step.
+
+## Future semantic search
+
+Embed each product's `search_text` once and key it by `product_id`. Keep the
+structured prices, context, source references, and issues available through the
+same final menu. Avoid embedding every image occurrence or the complete JSON as
+a single chunk.
+
+After retrieval, use the product ID to read exact variants. A question such as
+"under RM15" needs structured price filtering with the appropriate size,
+temperature, and price conditions. Keep series and add-ons separately typed if
+they are indexed. Evaluate expected matches, distinct blends, unknown facts, and
+duplicate results before using retrieval in customer answers.

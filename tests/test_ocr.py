@@ -23,6 +23,7 @@ class OCRTests(unittest.TestCase):
             write_result(doc, Path(directory), source.name)
             self.assertEqual(QwenDocument.model_validate_json(
                 (Path(directory) / "menu.png.json").read_bytes()), doc)
+            self.assertEqual({path.name for path in Path(directory).iterdir()}, {"menu.png", "menu.png.json"})
 
     def test_empty_input_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -48,6 +49,47 @@ class OCRTests(unittest.TestCase):
             QwenEngine("https://example.com", "qwen", 60)
 
     @patch("app.services.ocr.requests.Session")
+    def test_invalid_token_budgets_rejected_before_connecting(self, session):
+        for budgets in (
+            {"num_ctx": 0}, {"num_ctx": -1}, {"num_ctx": 8192.0}, {"num_ctx": True},
+            {"num_predict": 0}, {"num_predict": -1}, {"num_predict": 4096.0},
+            {"num_predict": True}, {"num_ctx": 4096, "num_predict": 4096},
+            {"num_ctx": 4096, "num_predict": 8192},
+        ):
+            with self.subTest(budgets=budgets), self.assertRaises(ValueError):
+                QwenEngine("http://127.0.0.1:11435", "qwen", 60, **budgets)
+        session.assert_not_called()
+
+    @patch("app.services.ocr.requests.Session")
+    def test_structuring_budgets_and_received_metrics(self, session):
+        session.return_value.get.return_value.json.return_value = {
+            "models": [{"name": "qwen", "digest": "abc"}]}
+        post = session.return_value.post
+        post.return_value.status_code = 200
+        metrics = {"prompt_eval_count": 5000, "eval_count": 2000,
+                   "total_duration": 9000000000, "eval_duration": 8000000000}
+        post.return_value.json.return_value = {
+            "done": True, "done_reason": "stop", "message": {"content": '{"products":[]}'},
+            **metrics,
+        }
+        engine = QwenEngine("http://127.0.0.1:11435", "qwen", 600,
+                            num_ctx=32768, num_predict=12288)
+        self.assertEqual(engine.last_generation, {})
+        messages = [{"role": "user", "content": "Structure these OCR results"}]
+        schema = {"type": "object"}
+        self.assertEqual(engine.generate_json(messages, schema), '{"products":[]}')
+        payload = post.call_args.kwargs["json"]
+        self.assertEqual(payload["messages"], messages)
+        self.assertEqual(payload["format"], schema)
+        self.assertEqual(payload["options"], {
+            "temperature": 0, "num_ctx": 32768, "num_predict": 12288})
+        self.assertEqual(engine.last_generation, metrics)
+        post.return_value.json.return_value = {
+            "done": True, "done_reason": "stop", "message": {"content": "{}"}}
+        engine.generate_json(messages, schema)
+        self.assertEqual(engine.last_generation, {})
+
+    @patch("app.services.ocr.requests.Session")
     def test_api_image_payload_and_truncation(self, session):
         session.return_value.get.return_value.json.return_value = {
             "models": [{"name": "qwen", "digest": "abc"}]}
@@ -58,9 +100,18 @@ class OCRTests(unittest.TestCase):
         engine = QwenEngine("http://127.0.0.1:11435", "qwen", 60)
         self.assertEqual(engine(Image.new("RGB", (20, 20))).transcription, "16.0")
         self.assertTrue(post.call_args.kwargs["json"]["messages"][0]["images"])
-        post.return_value.json.return_value["done_reason"] = "length"
-        with self.assertRaises(ValueError):
-            engine(Image.new("RGB", (20, 20)))
+        self.assertEqual(post.call_args.kwargs["json"]["options"], {
+            "temperature": 0, "num_ctx": 8192, "num_predict": 4096})
+        for completion in ({"done": True, "done_reason": "length"},
+                           {"done": False, "done_reason": "stop"}, {"done": True}):
+            post.return_value.json.return_value = {
+                "message": {"content": '{"transcription":"16.0","uncertainties":[]}'},
+                "eval_count": 4096, **completion,
+            }
+            engine.last_generation = {"eval_count": 99}
+            with self.subTest(completion=completion), self.assertRaises(ValueError):
+                engine(Image.new("RGB", (20, 20)))
+            self.assertEqual(engine.last_generation, {})
         post.return_value.json.return_value = {"done": True, "done_reason": "stop",
             "message": {"content": '{"transcription": "16.0"}'}}
         with self.assertRaises(ValidationError):
