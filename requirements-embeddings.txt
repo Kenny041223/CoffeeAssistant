@@ -1,0 +1,5 @@
+# Optional embedding environment; install the CUDA wheel first (docs/embeddings.md).
+-r requirements.txt
+torch==2.8.0+cu126
+sentence-transformers==5.1.2
+transformers==4.57.6

@@ -1,3 +1,5 @@
+# Runs images -> OCR -> structure.json using an already running Ollama server.
+# Python dependencies and Ollama models must already be installed.
 [CmdletBinding()]
 param(
     [switch]$SkipOcr,
@@ -6,7 +8,7 @@ param(
     [string]$OcrDirectory = 'data/qwen-ocr',
     [string]$Output = 'structure.json',
     [string]$PythonPath = '.venv/Scripts/python.exe',
-    [string]$OllamaUrl = 'http://127.0.0.1:11435',
+    [string]$OllamaUrl = 'http://127.0.0.1:11434',
     [string]$VisionModel = 'qwen3-vl:4b-instruct',
     [string]$TextModel = 'qwen3:4b-instruct-2507-q4_K_M',
     [string]$Currency,

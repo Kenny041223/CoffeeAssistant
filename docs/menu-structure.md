@@ -21,23 +21,28 @@ No accuracy or duplicate-removal results are claimed before that evaluation.
 
 ## Run
 
-Set up the models using [the OCR guide](ocr.md). The PowerShell wrapper runs OCR
-first and stops if it fails:
+Complete the one-time environment and model setup using [the OCR guide](ocr.md),
+then start Ollama. The PowerShell run script uses installed models, runs OCR
+first, and stops if it fails. It does not install packages, download models, or
+start a server. A missing model produces an error.
 
 ```powershell
-.\scripts\run-menu-pipeline.ps1
+.\scripts\generate_structureFile.ps1
 
 # Reuse existing OCR without loading the vision model
-.\scripts\run-menu-pipeline.ps1 -SkipOcr
+.\scripts\generate_structureFile.ps1 -SkipOcr
 
 # Confirmed currency is optional metadata
-.\scripts\run-menu-pipeline.ps1 -SkipOcr -Currency MYR
+.\scripts\generate_structureFile.ps1 -SkipOcr -Currency MYR
+
+# Portable Ollama server uses a different port
+.\scripts\generate_structureFile.ps1 -SkipOcr -OllamaUrl http://127.0.0.1:11435
 ```
 
 The menu step can also run directly:
 
 ```powershell
-.\.venv\Scripts\python.exe -m app.services.structure_menu
+.\.venv\Scripts\python.exe -m app.services.structure_menu --ollama-url http://127.0.0.1:11434
 
 # Custom input, output, and an existing Ollama server
 .\.venv\Scripts\python.exe -m app.services.structure_menu --input data/qwen-ocr --output structure.json --ollama-url http://127.0.0.1:11434
@@ -46,8 +51,11 @@ The menu step can also run directly:
 .\.venv\Scripts\python.exe -m app.services.structure_menu --prepare-only
 ```
 
-The defaults are `data/qwen-ocr/` input, `structure.json` output, text model
-`qwen3:4b-instruct-2507-q4_K_M`, and Ollama at `http://127.0.0.1:11435`.
+The defaults are `data/qwen-ocr/` input, `structure.json` output, and text model
+`qwen3:4b-instruct-2507-q4_K_M`. The script defaults to normal Ollama at
+`http://127.0.0.1:11434`; pass `-OllamaUrl http://127.0.0.1:11435` for portable
+Ollama. The direct Python entry point retains its `11435` default, so the
+examples above specify the normal installation's URL explicitly.
 `--currency MYR` supplies currency when confirmed; otherwise it remains `null`.
 The model is not asked to guess currency from the shop's location.
 
@@ -144,7 +152,7 @@ or quality guarantees. A larger context and output allowance require more memory
 
 ```powershell
 # Adjust only to settings supported by the other PC and chosen model
-.\scripts\run-menu-pipeline.ps1 -SkipOcr -NumCtx 32768 -NumPredict 12288 -Timeout 1200
+.\scripts\generate_structureFile.ps1 -SkipOcr -NumCtx 32768 -NumPredict 12288 -Timeout 1200
 ```
 
 The pipeline is intended for a small menu whose complete OCR and output fit in
@@ -153,12 +161,17 @@ truncate a detailed menu; raising the timeout only helps slow inference, not
 insufficient memory. For substantially larger menus, a future pipeline will need
 separate extraction batches followed by a model consolidation step.
 
-## Future semantic search
+## Embeddings and future semantic search
 
 Embed each product's `search_text` once and key it by `product_id`. Keep the
 structured prices, context, source references, and issues available through the
 same final menu. Avoid embedding every image occurrence or the complete JSON as
 a single chunk.
+
+The optional [Qwen embedding stage](embeddings.md) implements this export as
+`data/menu-embeddings.json`. It keeps the canonical menu unchanged and records
+the model revision and input hashes. Its first execution is reserved for the
+model-capable PC; database ingestion and customer-facing retrieval come later.
 
 After retrieval, use the product ID to read exact variants. A question such as
 "under RM15" needs structured price filtering with the appropriate size,

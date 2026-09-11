@@ -2,7 +2,8 @@
 
 A portfolio project that turns coffee shop menu images into structured data for
 a future customer service assistant. The current implementation focuses on local
-Qwen inference, structured output validation, and traceable extraction.
+Qwen inference, structured output validation, traceable extraction, and product
+embeddings for later semantic search.
 
 ## Current implementation
 
@@ -12,6 +13,8 @@ Menu images
     -> Qwen text model reads the complete OCR batch
        and generates one consolidated menu
     -> Python validates, attaches provenance, and saves structure.json
+    -> Qwen3-Embedding encodes one search_text per product
+    -> Save product IDs and vectors in data/menu-embeddings.json
 ```
 
 **Qwen generates the menu content:** product identities, descriptions, variants,
@@ -25,12 +28,13 @@ merge products or fill in menu facts after generation.
 are retained as evidence. There is no separate menu catalog or manual correction
 file in the active pipeline.
 
-**Validation status:** the revised pipeline is prepared for a model-capable PC.
-Its automated tests use mock model responses; this revision has not yet been
-run end to end with Qwen. No generated menu is shipped as proof of such a run.
-Extraction accuracy and semantic retrieval quality are still unmeasured.
+**Validation status:** OCR and menu-generation tests use mock model responses.
+The new embedding code and its tests have not been run, and no embedding model
+or packages were installed on the laptop. The actual generated menu remains on
+the model-capable PC and has not been inspected in this checkout. Extraction
+accuracy and semantic retrieval quality still require evaluation.
 
-## Run on the model-capable PC
+## First-time setup on the model-capable PC
 
 Install Python 3.12 and set up Ollama using [the setup guide](docs/ocr.md). From
 the project directory:
@@ -39,30 +43,37 @@ the project directory:
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-# Portable Ollama setup: start the server and download both models once
-.\scripts\start-qwen.ps1 -PullModel -PullTextModel
-
-# Images -> OCR -> model-generated structure.json
-.\scripts\run-menu-pipeline.ps1
+# Normal Ollama installation: download both models once
+ollama pull qwen3-vl:4b-instruct
+ollama pull qwen3:4b-instruct-2507-q4_K_M
 ```
 
-The defaults are `qwen3-vl:4b-instruct` for OCR and
-`qwen3:4b-instruct-2507-q4_K_M` for menu generation. The wrapper expects Ollama
-to be running and stops if either pipeline stage fails.
+For portable Ollama setup, follow the separate instructions in the setup guide.
+
+## Generate the menu
+
+Start Ollama first. The run script uses the existing environment and installed
+models; it does not install packages, download models, or start the server.
+Its default server is `http://127.0.0.1:11434`. The models are
+`qwen3-vl:4b-instruct` for OCR and `qwen3:4b-instruct-2507-q4_K_M` for menu
+generation. The script stops if either pipeline stage fails.
 
 ```powershell
-# Reuse existing OCR files and run only menu generation
-.\scripts\run-menu-pipeline.ps1 -SkipOcr
+# Images -> OCR -> model-generated structure.json
+.\scripts\generate_structureFile.ps1
 
-# Existing Ollama installation using its usual port
-.\scripts\run-menu-pipeline.ps1 -OllamaUrl http://127.0.0.1:11434
+# Reuse existing OCR files and run only menu generation
+.\scripts\generate_structureFile.ps1 -SkipOcr
+
+# Portable Ollama server using the project's separate port
+.\scripts\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
 
 # Supply currency only when confirmed from the menu or shop
-.\scripts\run-menu-pipeline.ps1 -SkipOcr -Currency MYR
+.\scripts\generate_structureFile.ps1 -SkipOcr -Currency MYR
 
 # This laptop: inspect the real prompt/schema/input without loading any model
 # Requires existing OCR JSON in data/qwen-ocr/
-.\scripts\run-menu-pipeline.ps1 -PrepareOnly
+.\scripts\generate_structureFile.ps1 -PrepareOnly
 
 # Mock inference tests; no model download or server required
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -81,11 +92,27 @@ drinks. Python rejects detectable duplicate identities and invalid references,
 then asks Qwen to correct its response once. This catches structural problems;
 it does not prove that every model merge is factually correct.
 
-Each product contains model-generated `search_text` for a future embedding,
-alongside exact price variants and source references. A later retrieval layer
-can embed that text once per product and use its ID to retrieve structured
-prices. Numeric price constraints need structured filters. No embeddings or
-vector database are created by this pipeline.
+Each product contains model-generated `search_text` alongside exact price
+variants and source references. The optional embedding stage encodes that text
+once per product and retains its ID for later structured lookup. Numeric price
+constraints need structured filters.
+
+## Product embeddings on the other PC
+
+Follow the [embedding setup guide](docs/embeddings.md) to create a separate
+environment with Pascal-compatible PyTorch and cache the Qwen model once on
+the GTX 1070 Ti PC. For normal runs:
+
+```powershell
+.\scripts\generate_embeddings.ps1
+```
+
+This uses Hugging Face `Qwen/Qwen3-Embedding-0.6B` at a fixed revision, FP32,
+standard attention, a batch size of two, and all 1,024 dimensions. The output
+contains vectors and references to `structure.json`; it does not create another
+menu catalog. The script always uses cached model files and fails if the cache
+is incomplete. It does not install dependencies or download weights. A vector
+database and chatbot have not been implemented yet.
 
 ## Project layout
 
@@ -93,23 +120,28 @@ vector database are created by this pipeline.
 app/models/                  OCR and final menu schemas
 app/services/ocr.py           Image transcription through Ollama
 app/services/structure_menu.py Batch menu generation, validation, and saving
+app/services/embed_menu.py    Optional Qwen document and query embeddings
+requirements-embeddings.txt   Optional dependencies for the embedding PC
 scripts/start-qwen.ps1        Portable Ollama setup helper
-scripts/run-menu-pipeline.ps1 Pipeline entry point
+scripts/generate_structureFile.ps1 Run OCR and menu generation
+scripts/generate_embeddings.ps1 Run embeddings from the cached model
 tests/                       Automated tests with mock inference
-docs/                        Setup and extraction workflow
+docs/                        Setup, extraction, and embedding workflow
 image/                       Input menu images
 data/qwen-ocr/                Local OCR evidence, generated at runtime
 data/structure-runs/          Local prompts, responses, and run manifests
+data/menu-embeddings.json     Derived vectors, created by the embedding stage
 structure.json               Final menu, created after a successful model run
 ```
 
 ## Next milestones
 
-- Run the revised pipeline on the model-capable PC and inspect its saved evidence.
+- Inspect the model-generated menu and saved evidence on the model-capable PC.
 - Review generated names, price mappings, identity merges, and unresolved issues
   against the original images.
+- Run the embedding stage on the GTX 1070 Ti PC and measure memory use.
+- Add a vector database and structured menu lookup, then expose a FastAPI API.
 - Evaluate expected product matches and duplicate handling with a small query set.
-- Add an embedding index and structured menu lookup, then expose a FastAPI API.
 - Build the customer assistant, controlled tool calls, and answer-quality evaluation.
 
 The API, customer assistant, vector database, and deployment are planned work.

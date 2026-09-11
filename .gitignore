@@ -1,7 +1,9 @@
 .venv/
+.venv-embeddings/
 __pycache__/
 *.py[cod]
 .env
 data/qwen-ocr/
 .tools/
 data/structure-runs/
+data/menu-embeddings.json

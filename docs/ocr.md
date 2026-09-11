@@ -2,10 +2,10 @@
 
 The pipeline uses `qwen3-vl:4b-instruct` to transcribe images, followed by
 `qwen3:4b-instruct-2507-q4_K_M` to generate the consolidated menu from all OCR
-text. Both run locally through Ollama. Prepare and test the code on this laptop;
-download and run the models on the model-capable PC.
+text. Both run locally through Ollama. Download models and run the pipeline on
+the model-capable PC. No scripts or models were executed for this update.
 
-## Python setup
+## First-time Python setup
 
 Install Python 3.12, then run from the project directory:
 
@@ -19,7 +19,7 @@ Copy the source project and `image/`; also copy `data/qwen-ocr/` if you want to
 reuse earlier OCR. OCR results and model weights are ignored by Git and will
 not be present in a fresh clone.
 
-## Ollama setup
+## First-time Ollama setup and model downloads
 
 Choose either a normal Ollama installation or the project's portable helper.
 See the official [Ollama Windows guide](https://docs.ollama.com/windows) for
@@ -30,7 +30,6 @@ For a normal installation, start Ollama and download both model tags:
 ```powershell
 ollama pull qwen3-vl:4b-instruct
 ollama pull qwen3:4b-instruct-2507-q4_K_M
-.\scripts\run-menu-pipeline.ps1 -OllamaUrl http://127.0.0.1:11434
 ```
 
 For the portable setup, extract the official Windows archive so
@@ -38,7 +37,6 @@ For the portable setup, extract the official Windows archive so
 
 ```powershell
 .\scripts\start-qwen.ps1 -PullModel -PullTextModel
-.\scripts\run-menu-pipeline.ps1
 ```
 
 The helper starts a hidden local server at `127.0.0.1:11435`, stores weights
@@ -47,24 +45,40 @@ Downloads require internet access and disk space. Once the weights are present,
 the local pipeline does not require an API key. Server logs live in `.tools/`;
 the helper leaves the server running.
 
-The pipeline wrapper does not install Ollama, download models, or start the
-server. On later runs, start the portable server with
-`.\scripts\start-qwen.ps1`, or use the running normal installation and its URL.
+## Generate the menu with installed models
+
+The run script uses the existing Python environment and models. It does not
+install Ollama or packages, download models, or start the server. Start the
+normal Ollama installation first, or start the portable server with
+`.\scripts\start-qwen.ps1` (without pull flags).
+
+```powershell
+# Normal Ollama installation: port 11434 is the script default
+.\scripts\generate_structureFile.ps1
+
+# Portable server: specify its separate port
+.\scripts\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
+
+# Reuse existing OCR results
+.\scripts\generate_structureFile.ps1 -SkipOcr
+```
+
+A missing model produces an error; the script does not pull it automatically.
 
 ## Run OCR independently
 
 ```powershell
 # All images in the image folder
-.\.venv\Scripts\python.exe -m app.services.ocr --input image
+.\.venv\Scripts\python.exe -m app.services.ocr --input image --ollama-url http://127.0.0.1:11434
 
 # One image
-.\.venv\Scripts\python.exe -m app.services.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg"
+.\.venv\Scripts\python.exe -m app.services.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg" --ollama-url http://127.0.0.1:11434
 
-# Existing Ollama installation using its usual port
-.\.venv\Scripts\python.exe -m app.services.ocr --ollama-url http://127.0.0.1:11434
+# Portable Ollama server
+.\.venv\Scripts\python.exe -m app.services.ocr --ollama-url http://127.0.0.1:11435
 
 # A separate output folder for an experiment
-.\.venv\Scripts\python.exe -m app.services.ocr --output data/qwen-ocr/experiment-2
+.\.venv\Scripts\python.exe -m app.services.ocr --output data/qwen-ocr/experiment-2 --ollama-url http://127.0.0.1:11434
 
 # Automated tests use mock inference; no model is loaded
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
