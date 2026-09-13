@@ -28,11 +28,14 @@ merge products or fill in menu facts after generation.
 are retained as evidence. There is no separate menu catalog or manual correction
 file in the active pipeline.
 
-**Validation status:** OCR and menu-generation tests use mock model responses.
-The new embedding code and its tests have not been run, and no embedding model
-or packages were installed on the laptop. The actual generated menu remains on
-the model-capable PC and has not been inspected in this checkout. Extraction
-accuracy and semantic retrieval quality still require evaluation.
+**Validation status:** OCR and menu-generation unit tests use mock model
+responses. The full pipeline has since been run end-to-end against real menu
+photos with real models: menu generation, human review against the source
+images (see `structure.json`'s per-product `issues` fields for what was
+manually corrected and why), embedding generation on the GTX 1070 Ti PC, and
+a Pinecone sync -- all independently verified. Semantic retrieval *quality*
+(are the right products actually returned for real customer queries) still
+requires evaluation; nothing here claims that yet.
 
 ## First-time setup on the model-capable PC
 
@@ -60,28 +63,30 @@ generation. The script stops if either pipeline stage fails.
 
 ```powershell
 # Images -> OCR -> model-generated structure.json
-.\scripts\generate_structureFile.ps1
+.\generate_embedding\generate_structureFile.ps1
 
 # Reuse existing OCR files and run only menu generation
-.\scripts\generate_structureFile.ps1 -SkipOcr
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr
 
 # Portable Ollama server using the project's separate port
-.\scripts\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
+.\generate_embedding\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
 
 # Supply currency only when confirmed from the menu or shop
-.\scripts\generate_structureFile.ps1 -SkipOcr -Currency MYR
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr -Currency MYR
 
 # This laptop: inspect the real prompt/schema/input without loading any model
 # Requires existing OCR JSON in data/qwen-ocr/
-.\scripts\generate_structureFile.ps1 -PrepareOnly
+.\generate_embedding\generate_structureFile.ps1 -PrepareOnly
 
 # Mock inference tests; no model download or server required
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
 `-PrepareOnly` skips OCR, saves the actual generation request artifacts, and
-does not create `structure.json`. See [menu generation](docs/menu-structure.md)
-for schema details, validation, run evidence, and memory-related options.
+does not create `structure.json`. See [menu generation](generate_embedding/menu-structure.md)
+for schema details, validation, run evidence, and memory-related options. A
+second, staged pipeline (`generate_embedding/structure_menu_v2.py`) also exists --
+see its module docstring for why it's now the primary path.
 
 ## Why one record per product
 
@@ -97,36 +102,53 @@ variants and source references. The optional embedding stage encodes that text
 once per product and retains its ID for later structured lookup. Numeric price
 constraints need structured filters.
 
-## Product embeddings on the other PC
+## Product embeddings and vector search
 
-Follow the [embedding setup guide](docs/embeddings.md) to create a separate
-environment with Pascal-compatible PyTorch and cache the Qwen model once on
-the GTX 1070 Ti PC. For normal runs:
+Follow the [embedding setup guide](generate_embedding/embeddings.md) to create
+a separate environment with Pascal-compatible PyTorch and cache the Qwen model
+once on the GTX 1070 Ti PC. For normal runs:
 
 ```powershell
-.\scripts\generate_embeddings.ps1
+.\generate_embedding\generate_embeddings.ps1
 ```
 
 This uses Hugging Face `Qwen/Qwen3-Embedding-0.6B` at a fixed revision, FP32,
 standard attention, a batch size of two, and all 1,024 dimensions. The output
 contains vectors and references to `structure.json`; it does not create another
 menu catalog. The script always uses cached model files and fails if the cache
-is incomplete. It does not install dependencies or download weights. A vector
-database and chatbot have not been implemented yet.
+is incomplete. It does not install dependencies or download weights.
+
+Vectors sync to a [Pinecone](https://www.pinecone.io/) index with
+[`generate_embedding/push_pinecone.ps1`](generate_embedding/pinecone.md) --
+see that guide for account setup, the `-DryRun` preview, and the two-way sync
+that removes vectors for products no longer in the menu. A retrieval endpoint
+and the customer-facing chatbot have not been implemented yet.
 
 ## Project layout
 
+Everything the pipeline runs -- schemas, OCR, both menu-generation
+pipelines, embeddings, and Pinecone sync -- lives in one folder:
+
 ```text
-app/models/                  OCR and final menu schemas
-app/services/ocr.py           Image transcription through Ollama
-app/services/structure_menu.py Batch menu generation, validation, and saving
-app/services/embed_menu.py    Optional Qwen document and query embeddings
-requirements-embeddings.txt   Optional dependencies for the embedding PC
-scripts/start-qwen.ps1        Portable Ollama setup helper
-scripts/generate_structureFile.ps1 Run OCR and menu generation
-scripts/generate_embeddings.ps1 Run embeddings from the cached model
+generate_embedding/menu.py                  Final menu schema (shared by every stage)
+generate_embedding/qwen_ocr.py              OCR transcription schema
+generate_embedding/ocr.py                   Image transcription through Ollama (shared)
+generate_embedding/structure_menu.py        Batch menu generation, validation, saving
+generate_embedding/structure_menu_v2.py     Staged menu generation (survey + per-item detail)
+generate_embedding/generate_structureFile.ps1 Run OCR and menu generation
+generate_embedding/menu-structure.md        Menu generation docs
+generate_embedding/embed_menu.py            Qwen document and query embeddings
+generate_embedding/embeddings.py            Embedding vector schema
+generate_embedding/pinecone_sync.py         Sync vectors to a Pinecone index
+generate_embedding/generate_embeddings.ps1  Run embeddings from the cached model
+generate_embedding/push_pinecone.ps1        Sync embeddings to Pinecone
+generate_embedding/requirements-embeddings.txt Optional deps for the embedding PC
+generate_embedding/requirements-pinecone.txt   Optional deps for the Pinecone sync
+generate_embedding/embeddings.md            Embedding stage docs
+generate_embedding/pinecone.md              Pinecone sync docs
+scripts/start-qwen.ps1        Portable Ollama setup helper (shared)
 tests/                       Automated tests with mock inference
-docs/                        Setup, extraction, and embedding workflow
+docs/                        OCR setup and customer-assistant design notes
 image/                       Input menu images
 data/qwen-ocr/                Local OCR evidence, generated at runtime
 data/structure-runs/          Local prompts, responses, and run manifests
@@ -136,12 +158,19 @@ structure.json               Final menu, created after a successful model run
 
 ## Next milestones
 
-- Inspect the model-generated menu and saved evidence on the model-capable PC.
-- Review generated names, price mappings, identity merges, and unresolved issues
-  against the original images.
-- Run the embedding stage on the GTX 1070 Ti PC and measure memory use.
-- Add a vector database and structured menu lookup, then expose a FastAPI API.
-- Evaluate expected product matches and duplicate handling with a small query set.
-- Build the customer assistant, controlled tool calls, and answer-quality evaluation.
+Done: menu generation (both pipelines), human review against source images,
+embedding generation, and Pinecone sync -- all run for real, not just coded.
 
-The API, customer assistant, vector database, and deployment are planned work.
+- Expose a retrieval endpoint (FastAPI) over the Pinecone index plus
+  structured price/size/temperature filtering (semantic similarity alone
+  doesn't enforce numeric constraints).
+- Evaluate expected product matches and duplicate handling with a real query
+  set -- see [`customer-assistant-notes.md`](docs/customer-assistant-notes.md)
+  for captured behavior requirements (e.g. the house-blend/seasonal bean flow).
+- Build the customer assistant, controlled tool calls, and answer-quality
+  evaluation.
+- Operationalize the re-run cycle for when the menu changes (seasonal batch
+  rotation, price updates): re-run OCR -> structure generation -> embeddings
+  -> Pinecone sync; the consistency checks already refuse stale data.
+
+The API, customer assistant, and deployment are still planned work.

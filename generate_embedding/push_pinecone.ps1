@@ -1,6 +1,8 @@
 # Syncs data/menu-embeddings.json vectors to Pinecone. No package
 # installation or embedding generation is performed. Requires
-# $env:PINECONE_API_KEY to already be set; never pass it as a parameter.
+# PINECONE_API_KEY to already be set (directly, or via a local .env file
+# in the project root -- see .env and generate_embedding/pinecone.md); never pass it as
+# a parameter.
 [CmdletBinding()]
 param(
     [string]$EmbeddingsFile = 'data/menu-embeddings.json',
@@ -21,12 +23,28 @@ try {
     if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) {
         throw "Python executable not found at '$PythonPath'. Create .venv and install requirements.txt first."
     }
+
+    # Load .env (if present) without ever printing its contents; an
+    # already-set environment variable always wins over the file.
+    $envFile = Join-Path $projectRoot '.env'
+    if (Test-Path -LiteralPath $envFile -PathType Leaf) {
+        foreach ($line in Get-Content -LiteralPath $envFile) {
+            if ($line -match '^\s*#' -or $line -notmatch '=') { continue }
+            $key, $value = $line -split '=', 2
+            $key = $key.Trim()
+            $value = $value.Trim()
+            if ($key -and $value -and -not (Test-Path "env:$key")) {
+                Set-Item -Path "env:$key" -Value $value
+            }
+        }
+    }
+
     if (-not $DryRun -and -not $env:PINECONE_API_KEY) {
-        throw 'PINECONE_API_KEY is not set. Set it in this shell first: $env:PINECONE_API_KEY = "..."'
+        throw 'PINECONE_API_KEY is not set. Fill it in in .env, or set it directly: $env:PINECONE_API_KEY = "..."'
     }
 
     $syncArguments = @(
-        '-m', 'app.services.pinecone_sync',
+        '-m', 'generate_embedding.pinecone_sync',
         '--embeddings', $EmbeddingsFile,
         '--menu', $MenuFile,
         '--batch-size', $BatchSize

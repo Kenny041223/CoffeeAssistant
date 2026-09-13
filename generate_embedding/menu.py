@@ -36,6 +36,10 @@ class ModelProduct(GroundedRecord):
     context: OptionalText
     aliases: list[Nonempty]
     category: OptionalText
+    # A bean/recipe that stays on the menu (house blend) vs one that rotates
+    # out when its batch finishes (seasonal specials). Null when the menu
+    # itself gives no such distinction for this product -- never guessed.
+    availability: Literal["permanent", "seasonal"] | None = None
     description: OptionalText
     variants: list[MenuVariant]
     series: list[Nonempty]
@@ -111,7 +115,7 @@ class Generation(StrictModel):
 
 class StructuredMenu(ModelMenu):
     """The sole final menu file; model content plus operational provenance."""
-    schema_version: Literal[3] = 3
+    schema_version: Literal[4] = 4
     status: Literal["draft"] = "draft"
     products: list[MenuProduct]
     generation: Generation

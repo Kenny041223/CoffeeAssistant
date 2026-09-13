@@ -809,8 +809,9 @@
       ],
       "issues": [
         "The menu labels this item 'white', not 'latte'; named 'latte' here per human reviewer clarification that the shop's 'white' coffee is its standard latte. Added manually after review -- the model originally declined to create a product for this line because 'white' has no explicit product name in the OCR (see source-09's source_notes).",
-        "The seasonal-specials 'white' coffee on the same menu (piccolo=10.0, 5oz=15.0, 8oz hot=17.0/iced=19.0) is a separate, more expensive variant and was not added here since only the regular (house blend) latte was requested.",
-        "No temperature is stated for the piccolo (3oz) or 5oz sizes in the OCR; only the 8oz size has separate hot/iced prices."
+        "See the separate 'latte' product with context 'seasonal specials' for the rotating, higher-priced counterpart on the same menu.",
+        "No temperature is stated for the piccolo (3oz) or 5oz sizes in the OCR; only the 8oz size has separate hot/iced prices.",
+        "Flavor description ('nutty, strong coffee flavour') is not from OCR -- provided directly by the shop owner during review and added here as a genuine product fact, same as the price/name corrections above."
       ],
       "name": "latte",
       "context": "house blend",
@@ -818,7 +819,8 @@
         "white"
       ],
       "category": "coffee",
-      "description": "The house blend's milk-based coffee, labeled 'white' on the menu, available as a 3oz piccolo, 5oz, or 8oz (hot or iced).",
+      "availability": "permanent",
+      "description": "The house blend's milk-based coffee, labeled 'white' on the menu, available as a 3oz piccolo, 5oz, or 8oz (hot or iced). Nutty and strong in coffee flavour.",
       "variants": [
         {
           "size": "piccolo (3oz)",
@@ -858,8 +860,72 @@
         }
       ],
       "series": [],
-      "search_text": "latte white coffee house blend milk coffee piccolo 3oz 5oz 8oz hot iced",
+      "search_text": "latte white coffee house blend milk coffee piccolo 3oz 5oz 8oz hot iced nutty strong flavour",
       "product_id": "drink-fdc040b42e7b"
+    },
+    {
+      "source_ids": [
+        "source-09"
+      ],
+      "evidence": [
+        {
+          "source_id": "source-09",
+          "quote": "white\npiccolo (3oz)\n10.0\n5oz\n15.0\n8oz\n17.0\n19.0"
+        }
+      ],
+      "issues": [
+        "The menu labels this item 'white', not 'latte'; named 'latte' to match its house-blend counterpart, since both are the same style of milk coffee, just a different (rotating) bean batch. Added manually after review.",
+        "This is the seasonal-specials counterpart to the 'latte' product with context 'house blend'. Its price is expected to change whenever the seasonal batch rotates -- re-run OCR and structure generation on updated menu photos when that happens rather than editing this price by hand.",
+        "No alias 'white' given here (unlike the house-blend latte) since both products are labeled 'white' on the menu and a shared alias would be ambiguous; 'white coffee' alone is treated as referring to the standing (house blend) item.",
+        "No temperature is stated for the piccolo (3oz) or 5oz sizes in the OCR; only the 8oz size has separate hot/iced prices."
+      ],
+      "name": "latte",
+      "context": "seasonal specials",
+      "aliases": [],
+      "category": "coffee",
+      "availability": "seasonal",
+      "description": "The current seasonal batch's milk-based coffee, labeled 'white' on the menu, available as a 3oz piccolo, 5oz, or 8oz (hot or iced). Rotates out when the batch finishes.",
+      "variants": [
+        {
+          "size": "piccolo (3oz)",
+          "temperature": null,
+          "price": 10.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "5oz",
+          "temperature": null,
+          "price": 15.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 17.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 19.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        }
+      ],
+      "series": [],
+      "search_text": "latte white coffee seasonal specials rotating batch piccolo 3oz 5oz 8oz hot iced",
+      "product_id": "drink-4a543e8026b3"
     }
   ],
   "series": [
@@ -1032,7 +1098,7 @@
     {
       "source_id": "source-09",
       "notes": [
-        "Identified house blend coffee with sizes; no named product — no product created. Updated after human review: added 'latte' for the house-blend 'white' coffee (see product notes)."
+        "Identified house blend coffee with sizes; no named product — no product created. Updated after human review: added 'latte' (context 'house blend', availability 'permanent') and its seasonal-specials counterpart (context 'seasonal specials', availability 'seasonal') for the 'white' coffee lines (see product notes)."
       ]
     },
     {
@@ -1084,7 +1150,7 @@
     "The 'DASH coffee®' appears in multiple sources as a brand or footer — not a product or series. It is not included as an item.",
     "The 'matcha' in source-10 with 'strawberry milk' is a drink, but no name is given — only 'matcha strawberry milk' is implied. This is treated as a product named 'matcha strawberry milk' with context 'strawberry milk'."
   ],
-  "schema_version": 3,
+  "schema_version": 4,
   "status": "draft",
   "generation": {
     "method": "qwen_staged",
@@ -1107,7 +1173,7 @@
   "currency": null,
   "currency_source": "unspecified",
   "source_count": 14,
-  "product_count": 20,
+  "product_count": 21,
   "sources": [
     {
       "source_id": "source-01",

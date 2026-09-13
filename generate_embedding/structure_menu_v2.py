@@ -34,12 +34,12 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from app.models.menu import (
+from generate_embedding.menu import (
     AddonOffer, Evidence, MenuVariant, ModelAddon, ModelMenu, ModelProduct, ModelSeries,
     Nonempty, OptionalText, SourceIds, SourceNote, StrictModel, StructuredMenu,
 )
-from app.services.ocr import QwenEngine
-from app.services.structure_menu import (
+from generate_embedding.ocr import QwenEngine
+from generate_embedding.structure_menu import (
     DEFAULT_STRUCTURE_MODEL, digest, guard_context, normalized, read_sources,
     validate_model_menu, write_atomic,
 )
@@ -71,6 +71,11 @@ Rules:
   series and addons.
 - context is a short disambiguating phrase for products only (e.g. which recipe or
   season); use null when there is nothing to disambiguate, and null for series/addons.
+- availability is "permanent" for a standard/house-blend item the menu presents as
+  always available, "seasonal" for an item explicitly under a rotating/limited-time
+  heading (e.g. "seasonal specials"). Use null whenever the menu doesn't itself state
+  this distinction for the item -- never infer it from ingredients or price alone.
+  Null for series and addons.
 - source_notes must contain exactly one entry for EVERY supplied source, including a
   note for excluded branding, empty text, or unresolved interpretation. This is an
   accounting of sources, not a guarantee every item was found.
@@ -116,6 +121,7 @@ class SurveyItem(StrictModel):
     name: Nonempty
     context: OptionalText
     category: OptionalText
+    availability: Literal["permanent", "seasonal"] | None
     source_ids: SourceIds
 
 
@@ -301,6 +307,7 @@ def assemble(survey: SurveyMenu, details: dict[int, object]) -> ModelMenu:
         if item.kind == "product":
             record["context"] = item.context
             record["category"] = item.category
+            record["availability"] = item.availability
             products.append(record)
         elif item.kind == "series":
             series.append(record)

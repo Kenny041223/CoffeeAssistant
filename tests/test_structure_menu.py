@@ -11,9 +11,9 @@ from unittest.mock import Mock, patch
 
 from pydantic import ValidationError
 
-from app.models.menu import ModelMenu, MenuVariant
-from app.models.qwen_ocr import QwenDocument
-from app.services.structure_menu import (
+from generate_embedding.menu import ModelMenu, MenuVariant
+from generate_embedding.qwen_ocr import QwenDocument
+from generate_embedding.structure_menu import (
     build_messages, generate_menu, main, read_sources, validate_model_menu,
 )
 
@@ -32,7 +32,7 @@ class StructureTests(unittest.TestCase):
     def payload():
         return dict(
             products=[dict(
-                name="Vienna latte", context=None, aliases=[], category=None,
+                name="Vienna latte", context=None, aliases=[], category=None, availability=None,
                 description="Coffee topped with whipped cream and cocoa.",
                 variants=[
                     dict(size="small", temperature="iced", price=18.0,
@@ -312,7 +312,7 @@ class StructureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             folder = self.write_batch(directory)
             output, run_root = Path(directory, "structure.json"), Path(directory, "runs")
-            with patch("app.services.structure_menu.QwenEngine") as engine:
+            with patch("generate_embedding.structure_menu.QwenEngine") as engine:
                 code, error = self.run_cli(["--input", folder, "--output", output,
                                            "--run-dir", run_root, "--prepare-only"])
             self.assertEqual(code, 0, error)
@@ -334,7 +334,7 @@ class StructureTests(unittest.TestCase):
             raw = json.dumps(self.payload())
             engine = self.engine(raw)
             engine.last_generation = {"prompt_eval_count": 1234, "eval_count": 567}
-            with patch("app.services.structure_menu.QwenEngine", return_value=engine) as factory:
+            with patch("generate_embedding.structure_menu.QwenEngine", return_value=engine) as factory:
                 code, error = self.run_cli(["--input", folder, "--output", output,
                                            "--run-dir", run_root, "--currency", "MYR"])
             self.assertEqual(code, 0, error)
@@ -342,7 +342,7 @@ class StructureTests(unittest.TestCase):
             self.assertEqual(factory.call_args.kwargs["num_ctx"], 32768)
             self.assertEqual(factory.call_args.kwargs["num_predict"], 12288)
             result = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual(result["schema_version"], 3)
+            self.assertEqual(result["schema_version"], 4)
             self.assertEqual(result["source_count"], 2)
             self.assertEqual(result["product_count"], 1)
             self.assertEqual(result["currency"], "MYR")
@@ -374,7 +374,7 @@ class StructureTests(unittest.TestCase):
                 engine = self.engine(failure if isinstance(failure, str) else "")
                 if isinstance(failure, Exception):
                     engine.generate_json.side_effect = failure
-                with patch("app.services.structure_menu.QwenEngine", return_value=engine):
+                with patch("generate_embedding.structure_menu.QwenEngine", return_value=engine):
                     code, _ = self.run_cli(["--input", folder, "--output", output, "--run-dir", run_root])
                 self.assertEqual(code, 1)
                 self.assertEqual(output.read_text(encoding="utf-8"), "previous menu")
@@ -388,7 +388,7 @@ class StructureTests(unittest.TestCase):
             output, run_root = Path(directory, "structure.json"), Path(directory, "runs")
             output.write_text("previous menu", encoding="utf-8")
             args = ["--input", folder, "--output", output, "--run-dir", run_root, "--prepare-only"]
-            with patch("app.services.structure_menu.QwenEngine") as engine:
+            with patch("generate_embedding.structure_menu.QwenEngine") as engine:
                 for _ in range(2):
                     code, error = self.run_cli(args)
                     self.assertEqual(code, 0, error)
@@ -402,7 +402,7 @@ class StructureTests(unittest.TestCase):
             output, run_root = Path(directory, "structure.json"), Path(directory, "runs")
             output.write_text("previous menu", encoding="utf-8")
             engine = self.engine(json.dumps(self.payload()))
-            with patch("app.services.structure_menu.QwenEngine", return_value=engine), \
+            with patch("generate_embedding.structure_menu.QwenEngine", return_value=engine), \
                  patch.object(Path, "replace", side_effect=OSError("permission denied")):
                 code, error = self.run_cli(["--input", folder, "--output", output, "--run-dir", run_root])
             self.assertEqual(code, 1, error)
@@ -417,7 +417,7 @@ class StructureTests(unittest.TestCase):
             for output in (folder / "menu-1.png.json", folder / "summary.json"):
                 with self.subTest(output=output.name):
                     before = output.read_bytes()
-                    with patch("app.services.structure_menu.QwenEngine") as engine:
+                    with patch("generate_embedding.structure_menu.QwenEngine") as engine:
                         code, _ = self.run_cli(["--input", folder, "--output", output,
                                                "--run-dir", Path(directory, "runs")])
                     self.assertEqual(code, 1)

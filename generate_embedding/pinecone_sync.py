@@ -15,7 +15,7 @@ alongside a similarity match.
 
 Sync is two-way: product_ids present in the index but no longer in the
 current menu are deleted, not just left stale (matching the design intent
-noted in docs/embeddings.md -- "Future database imports must also remove
+noted in generate_embedding/embeddings.md -- "Future database imports must also remove
 products that disappeared from the latest menu").
 """
 import argparse
@@ -25,8 +25,8 @@ import os
 import sys
 from pathlib import Path
 
-from app.models.embeddings import EMBEDDING_DIMENSIONS, MenuEmbeddings
-from app.models.menu import StructuredMenu
+from generate_embedding.embeddings import EMBEDDING_DIMENSIONS, MenuEmbeddings
+from generate_embedding.menu import StructuredMenu
 
 DEFAULT_INDEX = "coffee-menu"
 DEFAULT_CLOUD = "aws"
@@ -130,10 +130,10 @@ def main() -> int:
     try:
         if not args.embeddings.is_file():
             raise ValueError(f"Embeddings file not found: {args.embeddings}. "
-                              "Run scripts/generate_embeddings.ps1 first.")
+                              "Run generate_embedding/generate_embeddings.ps1 first.")
         if not args.menu.is_file():
             raise ValueError(f"Menu file not found: {args.menu}. "
-                              "Run scripts/generate_structureFile.ps1 first.")
+                              "Run generate_embedding/generate_structureFile.ps1 first.")
         embeddings = load_embeddings(args.embeddings)
         menu, menu_sha256 = load_menu(args.menu)
         check_consistency(embeddings, menu, menu_sha256)
@@ -157,7 +157,7 @@ def main() -> int:
         except ImportError as exc:
             raise RuntimeError(
                 "Install the pinecone package first: "
-                "pip install -r requirements-pinecone.txt"
+                "pip install -r generate_embedding/requirements-pinecone.txt"
             ) from exc
         api_key = os.environ.get("PINECONE_API_KEY")
         if not api_key:

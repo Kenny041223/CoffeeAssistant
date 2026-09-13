@@ -8,8 +8,9 @@ menu dataset; Pinecone only ever gets a copy of what's needed to filter and
 display a similarity match (name, category, aliases, price summary) alongside
 the vector, keyed by `product_id`.
 
-**Implementation status:** this stage has been set up but never run. No
-Pinecone account, index, or API key has been used with this code yet.
+**Implementation status:** run successfully -- the `coffee-menu` index exists
+(serverless, aws/us-east-1) with all 21 product vectors synced and
+independently verified via `describe_index_stats` and a metadata spot-check.
 
 ## One-time account setup (you do this, not this tool)
 
@@ -28,7 +29,7 @@ Pinecone account, index, or API key has been used with this code yet.
 ## Install (main `.venv`, no GPU needed)
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-pinecone.txt
+.\.venv\Scripts\python.exe -m pip install -r generate_embedding\requirements-pinecone.txt
 ```
 
 This only adds the `pinecone` client package on top of the existing
@@ -38,7 +39,7 @@ already-computed vectors is plain HTTP.
 ## Preview before touching your Pinecone account
 
 ```powershell
-.\scripts\push_pinecone.ps1 -DryRun
+.\generate_embedding\push_pinecone.ps1 -DryRun
 ```
 
 `-DryRun` makes **zero network calls** — it loads `menu-embeddings.json` and
@@ -52,10 +53,10 @@ expect before running for real.
 
 ```powershell
 # Defaults: index "coffee-menu", default namespace, aws/us-east-1 serverless
-.\scripts\push_pinecone.ps1
+.\generate_embedding\push_pinecone.ps1
 
 # Custom index/namespace/region
-.\scripts\push_pinecone.ps1 -IndexName my-menu -Namespace staging -Cloud gcp -Region us-central1
+.\generate_embedding\push_pinecone.ps1 -IndexName my-menu -Namespace staging -Cloud gcp -Region us-central1
 ```
 
 If the named index doesn't exist yet, it is created as a serverless index
@@ -89,6 +90,6 @@ needs a live index, so it does not run under `-DryRun`.)
 ## What's still future work
 
 Querying (`encode_query()` already exists in
-[`embed_menu.py`](../app/services/embed_menu.py) for later use), a retrieval
+[`embed_menu.py`](embed_menu.py) for later use), a retrieval
 service, and the customer-facing assistant are not part of this stage. This
 stage only keeps Pinecone's contents in sync with the local menu.

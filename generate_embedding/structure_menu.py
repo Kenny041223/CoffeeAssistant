@@ -11,9 +11,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.models.menu import ModelMenu, StructuredMenu
-from app.models.qwen_ocr import QwenDocument
-from app.services.ocr import QwenEngine
+from generate_embedding.menu import ModelMenu, StructuredMenu
+from generate_embedding.qwen_ocr import QwenDocument
+from generate_embedding.ocr import QwenEngine
 
 DEFAULT_STRUCTURE_MODEL = "qwen3:4b-instruct-2507-q4_K_M"
 PROMPT_VERSION = "menu-qwen-batch-v1"
@@ -35,6 +35,10 @@ Rules:
   citing every relevant source_id, never a second copy of the same record.
 - Keep house-blend and seasonal recipes distinct using context. Do not merge
   different names just because they share ingredients or similar descriptions.
+- availability is "permanent" for a standard/house-blend item the menu presents as
+  always available, "seasonal" for an item explicitly under a rotating/limited-time
+  heading (e.g. "seasonal specials"). Use null whenever the menu doesn't itself state
+  this distinction -- never infer it from ingredients or price alone.
 - Aliases are actual alternative names supported by the OCR. An OCR mistake or
   descriptive sentence is not an alias. Never use another product's name as an
   alias, and never list a product's own canonical name as its own alias. If a
@@ -84,7 +88,7 @@ def digest(value) -> str:
 
 def read_sources(folder: Path) -> list[tuple[Path, bytes, QwenDocument]]:
     if not folder.is_dir():
-        raise ValueError(f"OCR input folder does not exist: {folder}. Run app.services.ocr on your model PC first.")
+        raise ValueError(f"OCR input folder does not exist: {folder}. Run generate_embedding.ocr on your model PC first.")
     summary_path = folder / "summary.json"
     expected_status = {}
     if summary_path.exists():

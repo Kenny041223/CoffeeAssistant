@@ -37,7 +37,7 @@ try {
         }
         Write-Output 'Transcribing menu images with Qwen vision...'
         $ocrArguments = @(
-            '-m', 'app.services.ocr',
+            '-m', 'generate_embedding.ocr',
             '--input', $ImageInput,
             '--output', $OcrDirectory,
             '--model', $VisionModel,
@@ -53,7 +53,7 @@ try {
     }
 
     $structureArguments = @(
-        '-m', 'app.services.structure_menu',
+        '-m', 'generate_embedding.structure_menu',
         '--input', $OcrDirectory,
         '--output', $Output,
         '--model', $TextModel,

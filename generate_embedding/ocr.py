@@ -1,4 +1,4 @@
-"""Transcribe menu images with local Qwen: python -m app.services.ocr --input image."""
+"""Transcribe menu images with local Qwen: python -m generate_embedding.ocr --input image."""
 import argparse
 import base64
 import hashlib
@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import requests
 from PIL import Image, ImageOps
-from app.models.qwen_ocr import QwenDocument, QwenReading
+from generate_embedding.qwen_ocr import QwenDocument, QwenReading
 
 DEFAULT_MODEL = "qwen3-vl:4b-instruct"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}

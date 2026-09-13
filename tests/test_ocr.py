@@ -4,8 +4,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from PIL import Image
 from pydantic import ValidationError
-from app.models.qwen_ocr import QwenReading, QwenDocument
-from app.services.ocr import QwenEngine, extract_image, find_images, write_result
+from generate_embedding.qwen_ocr import QwenReading, QwenDocument
+from generate_embedding.ocr import QwenEngine, extract_image, find_images, write_result
 
 
 class OCRTests(unittest.TestCase):
@@ -48,7 +48,7 @@ class OCRTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             QwenEngine("https://example.com", "qwen", 60)
 
-    @patch("app.services.ocr.requests.Session")
+    @patch("generate_embedding.ocr.requests.Session")
     def test_invalid_token_budgets_rejected_before_connecting(self, session):
         for budgets in (
             {"num_ctx": 0}, {"num_ctx": -1}, {"num_ctx": 8192.0}, {"num_ctx": True},
@@ -60,7 +60,7 @@ class OCRTests(unittest.TestCase):
                 QwenEngine("http://127.0.0.1:11435", "qwen", 60, **budgets)
         session.assert_not_called()
 
-    @patch("app.services.ocr.requests.Session")
+    @patch("generate_embedding.ocr.requests.Session")
     def test_structuring_budgets_and_received_metrics(self, session):
         session.return_value.get.return_value.json.return_value = {
             "models": [{"name": "qwen", "digest": "abc"}]}
@@ -89,7 +89,7 @@ class OCRTests(unittest.TestCase):
         engine.generate_json(messages, schema)
         self.assertEqual(engine.last_generation, {})
 
-    @patch("app.services.ocr.requests.Session")
+    @patch("generate_embedding.ocr.requests.Session")
     def test_api_image_payload_and_truncation(self, session):
         session.return_value.get.return_value.json.return_value = {
             "models": [{"name": "qwen", "digest": "abc"}]}

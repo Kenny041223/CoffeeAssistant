@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.models.embeddings import (
+from generate_embedding.embeddings import (
     EMBEDDING_DIMENSIONS,
     EMBEDDING_MODEL,
     EMBEDDING_REVISION,
@@ -16,8 +16,8 @@ from app.models.embeddings import (
     EmbeddingRecipe,
     MenuEmbeddings,
 )
-from app.models.menu import StructuredMenu
-from app.services.structure_menu import validate_model_menu
+from generate_embedding.menu import StructuredMenu
+from generate_embedding.structure_menu import validate_model_menu
 
 
 def validate_vectors(vectors: list[list[float]], expected_count: int) -> None:
@@ -67,7 +67,7 @@ class QwenEmbedder:
         try:
             import torch
         except ImportError as exc:
-            raise RuntimeError("Install the embedding dependencies on the model PC; see docs/embeddings.md") from exc
+            raise RuntimeError("Install the embedding dependencies on the model PC; see generate_embedding/embeddings.md") from exc
         if device == "cuda":
             if not torch.cuda.is_available():
                 raise RuntimeError("CUDA is unavailable. Run on the GPU PC with a compatible PyTorch build. "
@@ -78,11 +78,11 @@ class QwenEmbedder:
                 torch.cuda.synchronize()
             except RuntimeError as exc:
                 raise RuntimeError("CUDA kernels are incompatible with this GPU. "
-                                   "GTX 1070 Ti needs a Pascal-compatible build; see docs/embeddings.md") from exc
+                                   "GTX 1070 Ti needs a Pascal-compatible build; see generate_embedding/embeddings.md") from exc
         try:
             from sentence_transformers import SentenceTransformer
         except ImportError as exc:
-            raise RuntimeError("Install requirements-embeddings.txt on the model PC first") from exc
+            raise RuntimeError("Install generate_embedding/requirements-embeddings.txt on the model PC first") from exc
         self.device = device
         self.batch_size = batch_size
         self.max_length = max_length

@@ -1,5 +1,5 @@
 # Optional Pinecone sync stage. Install into the main .venv (no GPU/torch
 # needed here -- this only reads already-generated vectors and metadata):
-#   .\.venv\Scripts\python.exe -m pip install -r requirements-pinecone.txt
--r requirements.txt
+#   .\.venv\Scripts\python.exe -m pip install -r generate_embedding\requirements-pinecone.txt
+-r ../requirements.txt
 pinecone==10.0.0

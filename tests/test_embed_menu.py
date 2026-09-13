@@ -8,8 +8,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from app.models.embeddings import EMBEDDING_DIMENSIONS, QUERY_PROMPT, MenuEmbeddings
-from app.services.embed_menu import QwenEmbedder, build_embeddings, read_menu, validate_vectors
+from generate_embedding.embeddings import EMBEDDING_DIMENSIONS, QUERY_PROMPT, MenuEmbeddings
+from generate_embedding.embed_menu import QwenEmbedder, build_embeddings, read_menu, validate_vectors
 
 
 def unit_vector(index=0):
@@ -28,7 +28,7 @@ def menu_payload():
             search_text=f"{name}: {description}",
         ))
     return dict(
-        schema_version=3, status="draft", products=products, series=[], addons=[], issues=[],
+        schema_version=4, status="draft", products=products, series=[], addons=[], issues=[],
         source_notes=[dict(source_id="source-01", notes=[])], product_count=2, source_count=1,
         currency=None, currency_source="unspecified",
         sources=[dict(source_id="source-01", ocr_file="menu.png.json", ocr_sha256="0" * 64,
@@ -65,7 +65,7 @@ class EmbeddingTests(unittest.TestCase):
     def test_one_vector_per_product_without_copying_menu_facts(self):
         original = self.input.read_bytes()
         expected = [unit_vector(), unit_vector(1)]
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.QwenEmbedder") as constructor:
             constructor.return_value.encode_documents.return_value = expected
             result = build_embeddings(self.input, self.output)
         constructor.return_value.encode_documents.assert_called_once_with(
@@ -104,7 +104,7 @@ class EmbeddingTests(unittest.TestCase):
         payload["products"][0]["evidence"][0]["quote"] = "Invented ingredients"
         bad_menus.append(payload)
         for payload in bad_menus:
-            with self.subTest(payload=payload), patch("app.services.embed_menu.QwenEmbedder") as constructor:
+            with self.subTest(payload=payload), patch("generate_embedding.embed_menu.QwenEmbedder") as constructor:
                 self.input.write_text(json.dumps(payload), encoding="utf-8")
                 with self.assertRaises(ValueError):
                     build_embeddings(self.input, self.output)
@@ -120,7 +120,7 @@ class EmbeddingTests(unittest.TestCase):
 
     def test_output_cannot_replace_source_menu(self):
         original = self.input.read_bytes()
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.QwenEmbedder") as constructor:
             with self.assertRaisesRegex(ValueError, "overwrite"):
                 build_embeddings(self.input, self.input)
             constructor.assert_not_called()
@@ -142,7 +142,7 @@ class EmbeddingTests(unittest.TestCase):
         self.output.write_bytes(b"previous complete artifact")
         for response in (RuntimeError("CUDA out of memory"), [unit_vector()]):
             with self.subTest(response=type(response).__name__), \
-                 patch("app.services.embed_menu.QwenEmbedder") as constructor:
+                 patch("generate_embedding.embed_menu.QwenEmbedder") as constructor:
                 encoder = constructor.return_value.encode_documents
                 if isinstance(response, Exception):
                     encoder.side_effect = response
@@ -159,7 +159,7 @@ class EmbeddingTests(unittest.TestCase):
             self.input.write_bytes(self.input.read_bytes() + b"\n")
             return [unit_vector(), unit_vector(1)]
 
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.QwenEmbedder") as constructor:
             constructor.return_value.encode_documents.side_effect = change_menu
             with self.assertRaisesRegex(ValueError, "changed"):
                 build_embeddings(self.input, self.output)
@@ -167,7 +167,7 @@ class EmbeddingTests(unittest.TestCase):
 
     def test_publish_failure_cleans_temporary_file(self):
         self.output.write_bytes(b"previous complete artifact")
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor, \
+        with patch("generate_embedding.embed_menu.QwenEmbedder") as constructor, \
              patch.object(Path, "replace", side_effect=OSError("file locked")):
             constructor.return_value.encode_documents.return_value = [unit_vector(), unit_vector(1)]
             with self.assertRaises(OSError):

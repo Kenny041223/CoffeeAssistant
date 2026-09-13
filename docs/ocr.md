@@ -54,13 +54,13 @@ normal Ollama installation first, or start the portable server with
 
 ```powershell
 # Normal Ollama installation: port 11434 is the script default
-.\scripts\generate_structureFile.ps1
+.\generate_embedding\generate_structureFile.ps1
 
 # Portable server: specify its separate port
-.\scripts\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
+.\generate_embedding\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
 
 # Reuse existing OCR results
-.\scripts\generate_structureFile.ps1 -SkipOcr
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr
 ```
 
 A missing model produces an error; the script does not pull it automatically.
@@ -69,16 +69,16 @@ A missing model produces an error; the script does not pull it automatically.
 
 ```powershell
 # All images in the image folder
-.\.venv\Scripts\python.exe -m app.services.ocr --input image --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --input image --ollama-url http://127.0.0.1:11434
 
 # One image
-.\.venv\Scripts\python.exe -m app.services.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg" --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg" --ollama-url http://127.0.0.1:11434
 
 # Portable Ollama server
-.\.venv\Scripts\python.exe -m app.services.ocr --ollama-url http://127.0.0.1:11435
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --ollama-url http://127.0.0.1:11435
 
 # A separate output folder for an experiment
-.\.venv\Scripts\python.exe -m app.services.ocr --output data/qwen-ocr/experiment-2 --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --output data/qwen-ocr/experiment-2 --ollama-url http://127.0.0.1:11434
 
 # Automated tests use mock inference; no model is loaded
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
