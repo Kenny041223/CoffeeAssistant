@@ -88,7 +88,10 @@ class SourceRecord(StrictModel):
 
 
 class Generation(StrictModel):
-    method: Literal["qwen_batch"] = "qwen_batch"
+    # qwen_batch: one call generates the complete menu. qwen_staged: a global
+    # identity survey followed by independent per-item detail generation, so
+    # one broken item costs one small retry instead of the whole menu.
+    method: Literal["qwen_batch", "qwen_staged"] = "qwen_batch"
     model: Nonempty
     model_digest: Nonempty
     prompt_version: Nonempty
@@ -97,7 +100,8 @@ class Generation(StrictModel):
     response_sha256: Nonempty
     run_id: Nonempty
     run_directory: Nonempty
-    attempt_count: int = Field(ge=1, le=2)
+    attempt_count: int = Field(ge=1, le=12)
+    model_calls: int | None = Field(default=None, ge=1)
     generated_at: Nonempty
     duration_seconds: float = Field(ge=0)
     num_ctx: int = Field(gt=0)

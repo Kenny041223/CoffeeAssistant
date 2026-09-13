@@ -30,20 +30,34 @@ Rules:
   Join line-wrapped names. Preserve every distinct drink, including unpriced ones.
   Merge only when the sources support the same identity. When identity is unclear,
   keep the records distinct with meaningful context and explain the issue.
+  No two products may share the same name AND the same context: if a drink is
+  described or priced in more than one source, that is still ONE product record
+  citing every relevant source_id, never a second copy of the same record.
 - Keep house-blend and seasonal recipes distinct using context. Do not merge
   different names just because they share ingredients or similar descriptions.
 - Aliases are actual alternative names supported by the OCR. An OCR mistake or
-  descriptive sentence is not an alias. Never use another product's name as an alias.
+  descriptive sentence is not an alias. Never use another product's name as an
+  alias, and never list a product's own canonical name as its own alias. If a
+  drink has no genuinely different alternative name, leave aliases empty.
 - Combine complementary descriptions, keeping their original meaning. Use null
   when information is absent or ambiguous. Null does not mean zero or unavailable.
 - Each size/temperature/price/condition combination appears once. Normalize S/L to
   small/large, but do not equate ounce sizes with small/large without evidence.
+  If two sources give the same size/temperature/price after normalizing (for
+  example one writes "S/L" and another writes "small/large" for the same
+  drink and price), that is ONE variant citing every confirming source_id, not
+  a separate variant per source.
   Temperature is hot, iced, or null; never assume hot by default. A description-only
   iced observation should not add an extra unknown-size variant when priced iced
   sizes already cover it. Retain conflicting prices and explain them in issues.
 - Series headings are group records, not products. Product.series lists existing
   series names. Group descriptions/prices remain group-level; do not assign all
   series toppings or a group price to every product without explicit support.
+  When a series lists several named variants under one heading (for example
+  "Coconut series: coffee coconut, choco coconut, strawberry coconut, matcha
+  coconut"), create ONE product per named variant, each with its OWN specific
+  name and price. Never name a product after the series heading itself, and
+  never repeat the same product name for more than one variant.
 - Optional extras are addons, not products or included ingredients. Keep uncertain
   add-on applicability null. Preserve different price/scope offers separately.
 - Every product, series and addon has source_ids and short verbatim evidence quotes
