@@ -178,7 +178,7 @@ def build_embeddings(input_path: Path, output_path: Path, *, batch_size: int = 2
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=Path("structure.json"))
-    parser.add_argument("--output", type=Path, default=Path("data/menu-embeddings.json"))
+    parser.add_argument("--output", type=Path, default=Path("generate_embedding/data/menu-embeddings.json"))
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")

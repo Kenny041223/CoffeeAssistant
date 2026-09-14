@@ -3,8 +3,8 @@
 [CmdletBinding()]
 param(
     [string]$InputFile = 'structure.json',
-    [string]$Output = 'data/menu-embeddings.json',
-    [string]$PythonPath = '.venv-embeddings/Scripts/python.exe',
+    [string]$Output = 'generate_embedding/data/menu-embeddings.json',
+    [string]$PythonPath = 'generate_embedding/.venv-embeddings/Scripts/python.exe',
     [ValidateRange(1, 2147483647)][int]$BatchSize = 2,
     [ValidateRange(1, 32768)][int]$MaxLength = 512,
     [ValidateSet('cuda', 'cpu')][string]$Device = 'cuda'

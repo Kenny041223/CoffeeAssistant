@@ -3,7 +3,7 @@
 __pycache__/
 *.py[cod]
 .env
-data/qwen-ocr/
+generate_embedding/data/qwen-ocr/
 .tools/
-data/structure-runs/
-data/menu-embeddings.json
+generate_embedding/data/structure-runs/
+generate_embedding/data/menu-embeddings.json

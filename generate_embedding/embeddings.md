@@ -18,9 +18,9 @@ Use Windows with Python 3.12, a working NVIDIA driver, and your actual generated
 keeps its installed dependencies:
 
 ```powershell
-py -3.12 -m venv .venv-embeddings
-.\.venv-embeddings\Scripts\python.exe -m pip install torch==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
-.\.venv-embeddings\Scripts\python.exe -m pip install -r generate_embedding\requirements-embeddings.txt
+py -3.12 -m venv generate_embedding/.venv-embeddings
+.\generate_embedding\.venv-embeddings\Scripts\python.exe -m pip install torch==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+.\generate_embedding\.venv-embeddings\Scripts\python.exe -m pip install -r generate_embedding\requirements-embeddings.txt
 ```
 
 The setup pins PyTorch 2.8.0 with CUDA 12.6, Sentence Transformers 5.1.2, and
@@ -42,7 +42,7 @@ If the snapshot is not already cached, this optional direct Python invocation
 downloads it and generates the first vectors from your reviewed menu:
 
 ```powershell
-.\.venv-embeddings\Scripts\python.exe -m generate_embedding.embed_menu --input structure.json --output data/menu-embeddings.json
+.\generate_embedding\.venv-embeddings\Scripts\python.exe -m generate_embedding.embed_menu --input structure.json --output generate_embedding/data/menu-embeddings.json
 ```
 
 The model is fixed to commit
@@ -58,14 +58,14 @@ Run from the project directory on that PC:
 .\generate_embedding\generate_embeddings.ps1
 
 # Custom menu and a smaller batch
-.\generate_embedding\generate_embeddings.ps1 -InputFile structure.json -Output data/menu-embeddings.json -BatchSize 1
+.\generate_embedding\generate_embeddings.ps1 -InputFile structure.json -Output generate_embedding/data/menu-embeddings.json -BatchSize 1
 ```
 
-The script uses `.venv-embeddings/Scripts/python.exe` and always passes
+The script uses `generate_embedding/.venv-embeddings/Scripts/python.exe` and always passes
 `--local-files-only` to Python. It does not install packages or download models.
 Missing dependencies or an incomplete model cache cause an error; complete the
 separate first-time setup before retrying. The default input is `structure.json`
-and output is `data/menu-embeddings.json`.
+and output is `generate_embedding/data/menu-embeddings.json`.
 
 | Setting | Default | Purpose |
 |---|---|---|
@@ -90,7 +90,7 @@ memory use still need measurement on the target PC.
 
 ## Output and later retrieval
 
-`structure.json` stays the only menu dataset. `data/menu-embeddings.json` is a
+`structure.json` stays the only menu dataset. `generate_embedding/data/menu-embeddings.json` is a
 derived vector artifact containing product IDs, vectors, text hashes, the input
 menu hash, and embedding configuration. It references the menu instead of
 duplicating product descriptions, price variants, or OCR evidence. Only products

@@ -1,6 +1,6 @@
 # Pinecone vector sync
 
-This stage reads the existing `data/menu-embeddings.json` vectors (produced by
+This stage reads the existing `generate_embedding/data/menu-embeddings.json` vectors (produced by
 the embedding stage, see [embeddings.md](embeddings.md)) plus `structure.json`
 for metadata, and upserts each product as one vector into a
 [Pinecone](https://www.pinecone.io/) index. `structure.json` stays the sole

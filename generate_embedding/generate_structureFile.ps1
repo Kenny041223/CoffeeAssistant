@@ -4,8 +4,8 @@
 param(
     [switch]$SkipOcr,
     [switch]$PrepareOnly,
-    [string]$ImageInput = 'image',
-    [string]$OcrDirectory = 'data/qwen-ocr',
+    [string]$ImageInput = 'generate_embedding/image',
+    [string]$OcrDirectory = 'generate_embedding/data/qwen-ocr',
     [string]$Output = 'structure.json',
     [string]$PythonPath = '.venv/Scripts/python.exe',
     [string]$OllamaUrl = 'http://127.0.0.1:11434',

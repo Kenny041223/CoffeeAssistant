@@ -14,7 +14,7 @@ Menu images
        and generates one consolidated menu
     -> Python validates, attaches provenance, and saves structure.json
     -> Qwen3-Embedding encodes one search_text per product
-    -> Save product IDs and vectors in data/menu-embeddings.json
+    -> Save product IDs and vectors in generate_embedding/data/menu-embeddings.json
 ```
 
 **Qwen generates the menu content:** product identities, descriptions, variants,
@@ -75,11 +75,11 @@ generation. The script stops if either pipeline stage fails.
 .\generate_embedding\generate_structureFile.ps1 -SkipOcr -Currency MYR
 
 # This laptop: inspect the real prompt/schema/input without loading any model
-# Requires existing OCR JSON in data/qwen-ocr/
+# Requires existing OCR JSON in generate_embedding/data/qwen-ocr/
 .\generate_embedding\generate_structureFile.ps1 -PrepareOnly
 
 # Mock inference tests; no model download or server required
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m unittest discover -s generate_embedding/tests -v
 ```
 
 `-PrepareOnly` skips OCR, saves the actual generation request artifacts, and
@@ -146,13 +146,13 @@ generate_embedding/requirements-embeddings.txt Optional deps for the embedding P
 generate_embedding/requirements-pinecone.txt   Optional deps for the Pinecone sync
 generate_embedding/embeddings.md            Embedding stage docs
 generate_embedding/pinecone.md              Pinecone sync docs
-scripts/start-qwen.ps1        Portable Ollama setup helper (shared)
-tests/                       Automated tests with mock inference
+generate_embedding/scripts/start-qwen.ps1 Portable Ollama setup helper (shared)
+generate_embedding/tests/    Automated tests with mock inference
 docs/                        OCR setup and customer-assistant design notes
-image/                       Input menu images
-data/qwen-ocr/                Local OCR evidence, generated at runtime
-data/structure-runs/          Local prompts, responses, and run manifests
-data/menu-embeddings.json     Derived vectors, created by the embedding stage
+generate_embedding/image/    Input menu images
+generate_embedding/data/qwen-ocr/     Local OCR evidence, generated at runtime
+generate_embedding/data/structure-runs/ Local prompts, responses, and run manifests
+generate_embedding/data/menu-embeddings.json Derived vectors, created by the embedding stage
 structure.json               Final menu, created after a successful model run
 ```
 

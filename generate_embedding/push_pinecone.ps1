@@ -1,11 +1,11 @@
-# Syncs data/menu-embeddings.json vectors to Pinecone. No package
+# Syncs generate_embedding/data/menu-embeddings.json vectors to Pinecone. No package
 # installation or embedding generation is performed. Requires
 # PINECONE_API_KEY to already be set (directly, or via a local .env file
 # in the project root -- see .env and generate_embedding/pinecone.md); never pass it as
 # a parameter.
 [CmdletBinding()]
 param(
-    [string]$EmbeddingsFile = 'data/menu-embeddings.json',
+    [string]$EmbeddingsFile = 'generate_embedding/data/menu-embeddings.json',
     [string]$MenuFile = 'structure.json',
     [string]$PythonPath = '.venv/Scripts/python.exe',
     [string]$IndexName,

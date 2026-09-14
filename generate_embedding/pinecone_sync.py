@@ -1,4 +1,4 @@
-"""Sync data/menu-embeddings.json vectors to a Pinecone index; no model loads
+"""Sync generate_embedding/data/menu-embeddings.json vectors to a Pinecone index; no model loads
 on import and no network calls happen under --dry-run.
 
 Setup only, by design: this module is written to be inspected and dry-run
@@ -114,7 +114,7 @@ def plan_sync(embeddings: MenuEmbeddings, menu: StructuredMenu, existing_ids: se
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--embeddings", type=Path, default=Path("data/menu-embeddings.json"))
+    parser.add_argument("--embeddings", type=Path, default=Path("generate_embedding/data/menu-embeddings.json"))
     parser.add_argument("--menu", type=Path, default=Path("structure.json"))
     parser.add_argument("--index", default=os.environ.get("PINECONE_INDEX", DEFAULT_INDEX))
     parser.add_argument("--namespace", default=os.environ.get("PINECONE_NAMESPACE", ""))

@@ -234,7 +234,7 @@ def write_atomic(document: StructuredMenu, output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("data/qwen-ocr"))
+    parser.add_argument("--input", type=Path, default=Path("generate_embedding/data/qwen-ocr"))
     parser.add_argument("--output", type=Path, default=Path("structure.json"))
     parser.add_argument("--model", default=DEFAULT_STRUCTURE_MODEL)
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11435")
@@ -242,7 +242,7 @@ def main() -> int:
     parser.add_argument("--num-ctx", type=int, default=32768)
     parser.add_argument("--num-predict", type=int, default=12288)
     parser.add_argument("--timeout", type=float, default=900)
-    parser.add_argument("--run-dir", type=Path, default=Path("data/structure-runs"))
+    parser.add_argument("--run-dir", type=Path, default=Path("generate_embedding/data/structure-runs"))
     parser.add_argument("--prepare-only", action="store_true", help="Save the request and schema without contacting Ollama")
     args = parser.parse_args()
     if args.currency and not re.fullmatch(r"[A-Z]{3}", args.currency):

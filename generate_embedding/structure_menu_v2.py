@@ -329,12 +329,12 @@ def find_item_index(error: str, survey: SurveyMenu) -> int | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("data/qwen-ocr"))
+    parser.add_argument("--input", type=Path, default=Path("generate_embedding/data/qwen-ocr"))
     parser.add_argument("--output", type=Path, default=Path("structure.json"))
     parser.add_argument("--model", default=DEFAULT_STRUCTURE_MODEL)
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11435")
     parser.add_argument("--currency", help="Confirmed three-letter currency code; otherwise unknown")
-    parser.add_argument("--run-dir", type=Path, default=Path("data/structure-runs"))
+    parser.add_argument("--run-dir", type=Path, default=Path("generate_embedding/data/structure-runs"))
     parser.add_argument("--survey-num-ctx", type=int, default=32768)
     parser.add_argument("--survey-num-predict", type=int, default=8000)
     parser.add_argument("--survey-timeout", type=float, default=900)
