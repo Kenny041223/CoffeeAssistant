@@ -22,12 +22,14 @@
       ],
       "issues": [
         "Source-02 and source-14 both list 'iced vienna latte' with prices 18.0 (S) and 20.0 (L), but source-14 also lists 'vienna latte' in a different context (without temperature specification) — this may indicate a potential inconsistency in naming or temperature context.",
-        "The description in source-01 specifies 'iced' and includes whipped cream and cocoa powder, but source-02 and source-14 do not mention these ingredients — this may indicate a gap in ingredient detail or a potential omission in the OCR transcription."
+        "The description in source-01 specifies 'iced' and includes whipped cream and cocoa powder, but source-02 and source-14 do not mention these ingredients — this may indicate a gap in ingredient detail or a potential omission in the OCR transcription.",
+        "is_best_seller set to true per direct confirmation from the shop (not read off any menu photo -- no source_id/evidence backs this specific fact, unlike every other field on this product)."
       ],
       "name": "iced vienna latte",
       "context": "iced",
       "aliases": [],
       "category": "coffee",
+      "is_best_seller": true,
       "description": "A creamy iced latte topped with smooth whipped cream and a dash of cocoa powder.",
       "variants": [
         {
@@ -52,7 +54,7 @@
         }
       ],
       "series": [],
-      "search_text": "iced vienna latte a creamy iced latte topped with smooth whipped cream and a dash of cocoa powder coffee specialty drink available in small and large sizes iced version",
+      "search_text": "iced vienna latte a creamy iced latte topped with smooth whipped cream and a dash of cocoa powder coffee specialty drink available in small and large sizes iced version best seller most popular customer favorite top pick",
       "product_id": "drink-809a9ba83f04"
     },
     {
@@ -70,7 +72,9 @@
           "quote": "coffee coconut\n15.0 (S) 17.0 (L)"
         }
       ],
-      "issues": [],
+      "issues": [
+        "search_text originally repeated the full Coconut series ingredient list ('matcha coffee chocolate strawberry cream') even though this product is only the coffee-cream flavor; trimmed after human review to match the description (already flavor-specific), so retrieval doesn't conflate this with the series' other flavors."
+      ],
       "name": "coffee coconut",
       "context": "coconut",
       "aliases": [],
@@ -101,7 +105,7 @@
       "series": [
         "Coconut series"
       ],
-      "search_text": "coffee coconut coconut series fresh coconut water topped with coffee chocolate strawberry cream specialty drink 15.0 17.0 small large",
+      "search_text": "coffee coconut coconut series fresh coconut water topped with coffee cream specialty drink 15.0 17.0 small large",
       "product_id": "drink-b3177f41056c"
     },
     {
@@ -114,12 +118,14 @@
           "quote": "Coconut series\n100% fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.\n\ncoffee coconut\n15.0 (S) 17.0 (L)\n\nchoco coconut\n15.0 (S) 17.0 (L)\n\nstrawberry coconut\n15.0 (S) 17.0 (L)\n\nmatcha coconut\n17.0 (S) 19.0 (L)\n\nDASH coffee®"
         }
       ],
-      "issues": [],
+      "issues": [
+        "description and search_text originally copied the full Coconut series listing verbatim ('topped with matcha, coffee, chocolate & strawberry cream'), and search_text additionally repeated the unrelated product name 'coffee coconut' -- both corrected after human review to describe only this drink's own chocolate-cream flavor, matching how 'coffee coconut' in the same series was already handled."
+      ],
       "name": "choco coconut",
       "context": "coconut",
       "aliases": [],
       "category": "coffee",
-      "description": "100% fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.",
+      "description": "Coconut series: 100% fresh coconut water topped with chocolate cream.",
       "variants": [
         {
           "size": "S",
@@ -143,7 +149,7 @@
       "series": [
         "Coconut series"
       ],
-      "search_text": "choco coconut coffee coconut 100% fresh coconut water topped with matcha coffee chocolate strawberry cream coconut series",
+      "search_text": "choco coconut coconut series 100% fresh coconut water topped with chocolate cream specialty drink small large 15.0 17.0",
       "product_id": "drink-80894997f4c9"
     },
     {
@@ -170,13 +176,14 @@
         "Price discrepancy: source-02 lists 'strawberry coconut' at 21.0 (no size/temperature), source-08 lists it at 15.0 (S) and 17.0 (L), source-10 lists 'strawberry milk' at 23.0, which may be a misattribution or OCR error.",
         "No explicit temperature is given for 'strawberry coconut' in any source. The term 'cloud' in source-02 may indicate a temperature or style, but is not clearly defined as hot or iced.",
         "The description in source-08 references a 'strawberry cream' in a coconut drink, but does not confirm whether this is the same as 'strawberry coconut'.",
-        "The term 'strawberry milk' in source-10 is distinct from 'strawberry coconut' and may be a different product."
+        "The term 'strawberry milk' in source-10 is distinct from 'strawberry coconut' and may be a different product.",
+        "description and search_text originally copied the full Coconut series listing verbatim ('topped with matcha, coffee, chocolate & strawberry cream') instead of naming just this drink's own flavor; corrected after human review to the strawberry-cream topping implied by the product's own name, resolving the description ambiguity noted above -- matching how 'coffee coconut' in the same series was already handled."
       ],
       "name": "strawberry coconut",
       "context": "coconut",
       "aliases": [],
       "category": "coffee",
-      "description": "A coffee drink featuring strawberry and coconut, part of the Coconut series. Includes fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.",
+      "description": "Coconut series: 100% fresh coconut water topped with strawberry cream.",
       "variants": [
         {
           "size": "S",
@@ -209,7 +216,7 @@
       "series": [
         "Coconut series"
       ],
-      "search_text": "strawberry coconut coffee drink, coconut series, fresh coconut water topped with matcha, coffee, chocolate & strawberry cream, iced, small large, 15.0 17.0",
+      "search_text": "strawberry coconut coconut series fresh coconut water topped with strawberry cream specialty drink iced small large 15.0 17.0 21.0",
       "product_id": "drink-0cd14de57d16"
     },
     {
@@ -227,12 +234,15 @@
           "quote": "Matcha_\nspecials\nmatcha coconut\n17.0 (S) 19.0 (L)\nmatcha\nstrawberry milk\n23.0\nmatcha cloud\n19.0 (S) 21.0 (L)\nDASH coffee®"
         }
       ],
-      "issues": [],
+      "issues": [
+        "category corrected from 'coffee' to 'tea' after human review: matcha is a tea product, not coffee, despite appearing in a coffee shop's coconut series. This is independently confirmed by source-10, which lists this same drink again under a separate 'Matcha specials' menu section alongside 'matcha strawberry milk' and 'matcha cloud' -- both undisputed tea items.",
+        "description and search_text originally copied the full Coconut series listing verbatim ('topped with matcha, coffee, chocolate & strawberry cream'), which is misleading now that this product is categorized as tea (it reads as if it also contains coffee); corrected after human review to name only this drink's own matcha-cream topping, matching how 'coffee coconut' in the same series was already handled. Still sharing the 'Coconut series' name/tag with three coffee-category siblings is a real overlap on the shop's own menu (not a data error) -- the assistant should mention this drink is matcha-based (tea) if a customer seems to be confusing it with the coffee-flavored Coconut series drinks."
+      ],
       "name": "matcha coconut",
       "context": "coconut",
       "aliases": [],
-      "category": "coffee",
-      "description": "Coconut series: 100% fresh coconut water topped with matcha, coffee, chocolate & strawberry cream.",
+      "category": "tea",
+      "description": "Coconut series: 100% fresh coconut water topped with matcha cream.",
       "variants": [
         {
           "size": "S",
@@ -258,7 +268,7 @@
       "series": [
         "Coconut series"
       ],
-      "search_text": "matcha coconut coconut series 100% fresh coconut water topped with matcha coffee chocolate strawberry cream",
+      "search_text": "matcha coconut coconut series 100% fresh coconut water topped with matcha cream tea specialty drink small large 17.0 19.0",
       "product_id": "drink-199a09225df2"
     },
     {
@@ -605,11 +615,13 @@
           "quote": "matcha cloud 19.0 21.0"
         }
       ],
-      "issues": [],
+      "issues": [
+        "category corrected from 'coffee' to 'tea' after human review: matcha is a tea product, not coffee."
+      ],
       "name": "matcha cloud",
       "context": "hot",
       "aliases": [],
-      "category": "coffee",
+      "category": "tea",
       "description": "A matcha-based specialty drink, part of the tea series, served hot.",
       "variants": [
         {
@@ -648,13 +660,14 @@
         }
       ],
       "issues": [
-        "The OCR excerpt does not specify size or temperature for matcha strawberry milk, only a standalone price of 23.0. The presence of 'S'/'L' in other lines (e.g., matcha coconut) does not extend to this item, so size and temperature are recorded as null rather than guessed."
+        "The OCR excerpt does not specify size or temperature for matcha strawberry milk, only a standalone price of 23.0. The presence of 'S'/'L' in other lines (e.g., matcha coconut) does not extend to this item, so size and temperature are recorded as null rather than guessed.",
+        "category corrected from 'coffee' to 'tea', and description/search_text's misleading 'within coffee offerings' phrasing removed, after a customer-facing chat test surfaced this drink being listed under 'coffee' -- matcha is a tea product, not coffee."
       ],
       "name": "matcha strawberry milk",
       "context": "strawberry milk",
       "aliases": [],
-      "category": "coffee",
-      "description": "A matcha strawberry milk beverage, part of the strawberry milk category within coffee offerings.",
+      "category": "tea",
+      "description": "A matcha strawberry milk beverage.",
       "variants": [
         {
           "size": null,
@@ -667,7 +680,7 @@
         }
       ],
       "series": [],
-      "search_text": "matcha strawberry milk beverage in strawberry milk category within coffee offerings, price 23.0 without size or temperature specification",
+      "search_text": "matcha strawberry milk beverage, tea, price 23.0 without size or temperature specification",
       "product_id": "drink-54aeaddfe947"
     },
     {
@@ -744,12 +757,13 @@
       "issues": [
         "No explicit mention of size or temperature in the OCR excerpt. Price is given as 23.0 but no size or temperature is specified. Cannot determine if this is hot, iced, or a specific size (e.g., small, large).",
         "The term 'gula apong' appears in both the ingredient list and as a component of the name, but no clarification is provided on whether it is a flavor, sweetener, or ingredient in the base beverage.",
-        "The name 'matcha gula apong' is distinct from 'matcha apong brûlée', which is a different product, suggesting that 'gula apong' is not a series name but a specific ingredient."
+        "The name 'matcha gula apong' is distinct from 'matcha apong brûlée', which is a different product, suggesting that 'gula apong' is not a series name but a specific ingredient.",
+        "category corrected from 'coffee' to 'tea' after human review: matcha is a tea product, not coffee."
       ],
       "name": "matcha gula apong",
       "context": "gula apong",
       "aliases": [],
-      "category": "coffee",
+      "category": "tea",
       "description": "A matcha coffee beverage made with matcha, gula apong, and milk, using gula apong granules.",
       "variants": [
         {
@@ -776,11 +790,13 @@
           "quote": "matcha apong brûlée\n23.0\nmatcha cream, gula apong,\nmilk, gula apong brûlée."
         }
       ],
-      "issues": [],
+      "issues": [
+        "category corrected from 'coffee' to 'tea' after human review: matcha is a tea product, not coffee."
+      ],
       "name": "matcha apong brûlée",
       "context": "gula apong brûlée",
       "aliases": [],
-      "category": "coffee",
+      "category": "tea",
       "description": "matcha cream, gula apong, milk, gula apong brûlée",
       "variants": [
         {
@@ -926,6 +942,112 @@
       "series": [],
       "search_text": "latte white coffee seasonal specials rotating batch piccolo 3oz 5oz 8oz hot iced",
       "product_id": "drink-4a543e8026b3"
+    },
+    {
+      "source_ids": [
+        "source-09"
+      ],
+      "evidence": [
+        {
+          "source_id": "source-09",
+          "quote": "black\nhot\niced\n5oz\n11.0\n15.0\n8oz\n13.0"
+        }
+      ],
+      "issues": [
+        "Added manually after review, alongside the house-blend 'latte'/'white' entry, since the same house-blend/seasonal-specials menu section also lists a 'black' coffee. The OCR text order for this table ('5oz, 11.0, 15.0, 8oz, 13.0') doesn't linearize cleanly into (size, hot, iced) triples on its own; values were assigned by directly viewing image/coffee_menu.jpeg's grid layout (5oz has only a hot price; 8oz has both hot and iced prices), the same reading already verified correct for the 'white' entries in this same table.",
+        "No temperature is stated for the 5oz size in the OCR; only the 8oz size has a separate iced price, so 5oz is recorded as hot only (no iced variant), matching what the image shows (blank iced cell for that row)."
+      ],
+      "name": "black",
+      "context": "house blend",
+      "aliases": [],
+      "category": "coffee",
+      "availability": "permanent",
+      "description": "The house blend's black coffee, available as 5oz (hot) or 8oz (hot or iced).",
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 11.0,
+          "price_note": null,
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 13.0,
+          "price_note": null,
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 15.0,
+          "price_note": null,
+          "source_ids": [
+            "source-09"
+          ]
+        }
+      ],
+      "series": [],
+      "search_text": "black coffee house blend 5oz 8oz hot iced",
+      "product_id": "drink-d9d3880da0ed"
+    },
+    {
+      "source_ids": [
+        "source-09"
+      ],
+      "evidence": [
+        {
+          "source_id": "source-09",
+          "quote": "black\nhot\niced\n5oz\n13.0\n17.0\n8oz\n15.0"
+        }
+      ],
+      "issues": [
+        "Added manually after review, alongside the seasonal-specials 'latte'/'white' entry, since the same section also lists a seasonal 'black' coffee. Same OCR text-ordering caveat as the house-blend 'black' entry -- values assigned by direct image verification, not by linearizing the OCR text.",
+        "This is the seasonal-specials counterpart to the 'black' product with context 'house blend'. Its price is expected to change whenever the seasonal batch rotates -- re-run OCR and structure generation on updated menu photos when that happens rather than editing this price by hand."
+      ],
+      "name": "black",
+      "context": "seasonal specials",
+      "aliases": [],
+      "category": "coffee",
+      "availability": "seasonal",
+      "description": "The current seasonal batch's black coffee, available as 5oz (hot) or 8oz (hot or iced). Rotates out when the batch finishes.",
+      "variants": [
+        {
+          "size": "5oz",
+          "temperature": "hot",
+          "price": 13.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "hot",
+          "price": 15.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        },
+        {
+          "size": "8oz",
+          "temperature": "iced",
+          "price": 17.0,
+          "price_note": "Seasonal batch price as of this menu capture; reconfirm current price in-store before ordering.",
+          "source_ids": [
+            "source-09"
+          ]
+        }
+      ],
+      "series": [],
+      "search_text": "black coffee seasonal specials rotating batch 5oz 8oz hot iced",
+      "product_id": "drink-c0409ca36f46"
     }
   ],
   "series": [
@@ -1098,7 +1220,7 @@
     {
       "source_id": "source-09",
       "notes": [
-        "Identified house blend coffee with sizes; no named product — no product created. Updated after human review: added 'latte' (context 'house blend', availability 'permanent') and its seasonal-specials counterpart (context 'seasonal specials', availability 'seasonal') for the 'white' coffee lines (see product notes)."
+        "Identified house blend coffee with sizes; no named product — no product created. Updated after human review: added 'latte' and 'black' (context 'house blend', availability 'permanent'), and their seasonal-specials counterparts (context 'seasonal specials', availability 'seasonal'), for the 'white' and 'black' coffee lines (see product notes)."
       ]
     },
     {
@@ -1150,7 +1272,7 @@
     "The 'DASH coffee®' appears in multiple sources as a brand or footer — not a product or series. It is not included as an item.",
     "The 'matcha' in source-10 with 'strawberry milk' is a drink, but no name is given — only 'matcha strawberry milk' is implied. This is treated as a product named 'matcha strawberry milk' with context 'strawberry milk'."
   ],
-  "schema_version": 4,
+  "schema_version": 5,
   "status": "draft",
   "generation": {
     "method": "qwen_staged",
@@ -1173,7 +1295,7 @@
   "currency": null,
   "currency_source": "unspecified",
   "source_count": 14,
-  "product_count": 21,
+  "product_count": 23,
   "sources": [
     {
       "source_id": "source-01",

@@ -99,6 +99,18 @@ def build_metadata(product) -> dict:
     return metadata
 
 
+def existing_vector_ids(index, namespace: str | None) -> set[str]:
+    """index.list() yields ListResponse pages, each holding .vectors: a list of
+    ListItem(id=...) -- not plain ID strings. Isolated here since that exact
+    shape assumption is what broke the first time this ran against a
+    non-empty index (every earlier sync only ever saw a freshly-created,
+    empty one, so the bug was latent and untested)."""
+    ids: set[str] = set()
+    for page in index.list(namespace=namespace):
+        ids.update(item.id for item in page.vectors)
+    return ids
+
+
 def plan_sync(embeddings: MenuEmbeddings, menu: StructuredMenu, existing_ids: set[str]) -> tuple[list[dict], set[str]]:
     """Pure computation: what to upsert and what to delete. No network calls."""
     products_by_id = {p.product_id: p for p in menu.products}
@@ -173,9 +185,7 @@ def main() -> int:
                                  spec=ServerlessSpec(cloud=args.cloud, region=args.region))
         index = client.Index(args.index)
 
-        existing_ids: set[str] = set()
-        for batch in index.list(namespace=args.namespace or None):
-            existing_ids.update(batch)
+        existing_ids = existing_vector_ids(index, args.namespace or None)
 
         upserts, to_delete = plan_sync(embeddings, menu, existing_ids)
         for start in range(0, len(upserts), args.batch_size):

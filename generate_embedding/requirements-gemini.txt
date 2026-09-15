@@ -1,0 +1,6 @@
+# Gemini API client, used for both menu embedding (embed_menu.py) and menu
+# generation if that pipeline is ever switched to Gemini too. No GPU needed --
+# install into the main .venv:
+#   .\.venv\Scripts\python.exe -m pip install -r generate_embedding\requirements-gemini.txt
+-r ../requirements.txt
+google-genai==2.23.0

@@ -33,6 +33,7 @@ class StructureTests(unittest.TestCase):
         return dict(
             products=[dict(
                 name="Vienna latte", context=None, aliases=[], category=None, availability=None,
+                is_best_seller=False,
                 description="Coffee topped with whipped cream and cocoa.",
                 variants=[
                     dict(size="small", temperature="iced", price=18.0,
@@ -342,7 +343,7 @@ class StructureTests(unittest.TestCase):
             self.assertEqual(factory.call_args.kwargs["num_ctx"], 32768)
             self.assertEqual(factory.call_args.kwargs["num_predict"], 12288)
             result = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual(result["schema_version"], 4)
+            self.assertEqual(result["schema_version"], 5)
             self.assertEqual(result["source_count"], 2)
             self.assertEqual(result["product_count"], 1)
             self.assertEqual(result["currency"], "MYR")

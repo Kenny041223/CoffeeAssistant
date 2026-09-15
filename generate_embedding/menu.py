@@ -40,6 +40,11 @@ class ModelProduct(GroundedRecord):
     # out when its batch finishes (seasonal specials). Null when the menu
     # itself gives no such distinction for this product -- never guessed.
     availability: Literal["permanent", "seasonal"] | None = None
+    # A marketing fact, not something read off a menu photo -- unlike every
+    # other field here it has no OCR evidence behind it, so it's set by
+    # direct human confirmation only (documented in `issues` when set) and
+    # defaults to False for every product the pipeline generates.
+    is_best_seller: bool = False
     description: OptionalText
     variants: list[MenuVariant]
     series: list[Nonempty]
@@ -115,7 +120,7 @@ class Generation(StrictModel):
 
 class StructuredMenu(ModelMenu):
     """The sole final menu file; model content plus operational provenance."""
-    schema_version: Literal[4] = 4
+    schema_version: Literal[5] = 5
     status: Literal["draft"] = "draft"
     products: list[MenuProduct]
     generation: Generation
