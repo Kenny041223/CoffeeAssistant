@@ -4,7 +4,7 @@ The text model reads the complete OCR batch and generates a single menu in one
 structured response. It decides which image occurrences describe the same
 product, combines their supported details, and writes the product search text.
 Python validates that response and adds identifiers and provenance before saving
-`structure.json` (schema version 3).
+`structure.json` (schema version 4).
 
 ```text
 All Qwen OCR JSON files
@@ -15,9 +15,19 @@ All Qwen OCR JSON files
     -> atomically save structure.json
 ```
 
-This revision is ready to run on the model-capable PC. Tests exercise mocked
-inference; the revised batch generation has not yet been run with a real model.
-No accuracy or duplicate-removal results are claimed before that evaluation.
+**Note:** this document describes the original single-call pipeline
+(`structure_menu.py`, `method: "qwen_batch"`). A second pipeline,
+`structure_menu_v2.py` (`method: "qwen_staged"`), now exists alongside it and
+is what actually produced the current `structure.json` -- it surveys all OCR
+sources for identity first, then generates each product/series/addon's detail
+independently, so one bad item costs a small retry instead of regenerating the
+whole menu. See its module docstring for the full design; this file has not
+yet been rewritten to cover it in the same depth as the batch pipeline below.
+
+This revision is ready to run on the model-capable PC. Both pipelines have
+been run against real menu photos with a real model; see `generate_embedding/data/structure-runs/`
+for evidence of specific runs, and `structure.json`'s own `generation.method`
+field to see which pipeline produced it.
 
 ## Run
 
@@ -27,31 +37,31 @@ first, and stops if it fails. It does not install packages, download models, or
 start a server. A missing model produces an error.
 
 ```powershell
-.\scripts\generate_structureFile.ps1
+.\generate_embedding\generate_structureFile.ps1
 
 # Reuse existing OCR without loading the vision model
-.\scripts\generate_structureFile.ps1 -SkipOcr
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr
 
 # Confirmed currency is optional metadata
-.\scripts\generate_structureFile.ps1 -SkipOcr -Currency MYR
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr -Currency MYR
 
 # Portable Ollama server uses a different port
-.\scripts\generate_structureFile.ps1 -SkipOcr -OllamaUrl http://127.0.0.1:11435
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr -OllamaUrl http://127.0.0.1:11435
 ```
 
 The menu step can also run directly:
 
 ```powershell
-.\.venv\Scripts\python.exe -m app.services.structure_menu --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.structure_menu --ollama-url http://127.0.0.1:11434
 
 # Custom input, output, and an existing Ollama server
-.\.venv\Scripts\python.exe -m app.services.structure_menu --input data/qwen-ocr --output structure.json --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.structure_menu --input generate_embedding/data/qwen-ocr --output structure.json --ollama-url http://127.0.0.1:11434
 
 # Inspect the actual request without connecting to Ollama
-.\.venv\Scripts\python.exe -m app.services.structure_menu --prepare-only
+.\.venv\Scripts\python.exe -m generate_embedding.structure_menu --prepare-only
 ```
 
-The defaults are `data/qwen-ocr/` input, `structure.json` output, and text model
+The defaults are `generate_embedding/data/qwen-ocr/` input, `structure.json` output, and text model
 `qwen3:4b-instruct-2507-q4_K_M`. The script defaults to normal Ollama at
 `http://127.0.0.1:11434`; pass `-OllamaUrl http://127.0.0.1:11435` for portable
 Ollama. The direct Python entry point retains its `11435` default, so the
@@ -124,7 +134,7 @@ with a nonzero code. There is no Python-generated fallback menu.
 
 ## Run evidence for the portfolio
 
-Each invocation creates a unique run folder under `data/structure-runs/`.
+Each invocation creates a unique run folder under `generate_embedding/data/structure-runs/`.
 `--run-dir PATH` changes that parent directory; it does not reuse an earlier run.
 The run artifacts include:
 
@@ -152,7 +162,7 @@ or quality guarantees. A larger context and output allowance require more memory
 
 ```powershell
 # Adjust only to settings supported by the other PC and chosen model
-.\scripts\generate_structureFile.ps1 -SkipOcr -NumCtx 32768 -NumPredict 12288 -Timeout 1200
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr -NumCtx 32768 -NumPredict 12288 -Timeout 1200
 ```
 
 The pipeline is intended for a small menu whose complete OCR and output fit in
@@ -169,7 +179,7 @@ same final menu. Avoid embedding every image occurrence or the complete JSON as
 a single chunk.
 
 The optional [Qwen embedding stage](embeddings.md) implements this export as
-`data/menu-embeddings.json`. It keeps the canonical menu unchanged and records
+`generate_embedding/data/menu-embeddings.json`. It keeps the canonical menu unchanged and records
 the model revision and input hashes. Its first execution is reserved for the
 model-capable PC; database ingestion and customer-facing retrieval come later.
 

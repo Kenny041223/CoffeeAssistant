@@ -11,9 +11,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.models.menu import ModelMenu, StructuredMenu
-from app.models.qwen_ocr import QwenDocument
-from app.services.ocr import QwenEngine
+from generate_embedding.menu import ModelMenu, StructuredMenu
+from generate_embedding.qwen_ocr import QwenDocument
+from generate_embedding.ocr import QwenEngine
 
 DEFAULT_STRUCTURE_MODEL = "qwen3:4b-instruct-2507-q4_K_M"
 PROMPT_VERSION = "menu-qwen-batch-v1"
@@ -30,20 +30,38 @@ Rules:
   Join line-wrapped names. Preserve every distinct drink, including unpriced ones.
   Merge only when the sources support the same identity. When identity is unclear,
   keep the records distinct with meaningful context and explain the issue.
+  No two products may share the same name AND the same context: if a drink is
+  described or priced in more than one source, that is still ONE product record
+  citing every relevant source_id, never a second copy of the same record.
 - Keep house-blend and seasonal recipes distinct using context. Do not merge
   different names just because they share ingredients or similar descriptions.
+- availability is "permanent" for a standard/house-blend item the menu presents as
+  always available, "seasonal" for an item explicitly under a rotating/limited-time
+  heading (e.g. "seasonal specials"). Use null whenever the menu doesn't itself state
+  this distinction -- never infer it from ingredients or price alone.
 - Aliases are actual alternative names supported by the OCR. An OCR mistake or
-  descriptive sentence is not an alias. Never use another product's name as an alias.
+  descriptive sentence is not an alias. Never use another product's name as an
+  alias, and never list a product's own canonical name as its own alias. If a
+  drink has no genuinely different alternative name, leave aliases empty.
 - Combine complementary descriptions, keeping their original meaning. Use null
   when information is absent or ambiguous. Null does not mean zero or unavailable.
 - Each size/temperature/price/condition combination appears once. Normalize S/L to
   small/large, but do not equate ounce sizes with small/large without evidence.
+  If two sources give the same size/temperature/price after normalizing (for
+  example one writes "S/L" and another writes "small/large" for the same
+  drink and price), that is ONE variant citing every confirming source_id, not
+  a separate variant per source.
   Temperature is hot, iced, or null; never assume hot by default. A description-only
   iced observation should not add an extra unknown-size variant when priced iced
   sizes already cover it. Retain conflicting prices and explain them in issues.
 - Series headings are group records, not products. Product.series lists existing
   series names. Group descriptions/prices remain group-level; do not assign all
   series toppings or a group price to every product without explicit support.
+  When a series lists several named variants under one heading (for example
+  "Coconut series: coffee coconut, choco coconut, strawberry coconut, matcha
+  coconut"), create ONE product per named variant, each with its OWN specific
+  name and price. Never name a product after the series heading itself, and
+  never repeat the same product name for more than one variant.
 - Optional extras are addons, not products or included ingredients. Keep uncertain
   add-on applicability null. Preserve different price/scope offers separately.
 - Every product, series and addon has source_ids and short verbatim evidence quotes
@@ -70,7 +88,7 @@ def digest(value) -> str:
 
 def read_sources(folder: Path) -> list[tuple[Path, bytes, QwenDocument]]:
     if not folder.is_dir():
-        raise ValueError(f"OCR input folder does not exist: {folder}. Run app.services.ocr on your model PC first.")
+        raise ValueError(f"OCR input folder does not exist: {folder}. Run generate_embedding.ocr on your model PC first.")
     summary_path = folder / "summary.json"
     expected_status = {}
     if summary_path.exists():
@@ -216,7 +234,7 @@ def write_atomic(document: StructuredMenu, output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("data/qwen-ocr"))
+    parser.add_argument("--input", type=Path, default=Path("generate_embedding/data/qwen-ocr"))
     parser.add_argument("--output", type=Path, default=Path("structure.json"))
     parser.add_argument("--model", default=DEFAULT_STRUCTURE_MODEL)
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11435")
@@ -224,7 +242,7 @@ def main() -> int:
     parser.add_argument("--num-ctx", type=int, default=32768)
     parser.add_argument("--num-predict", type=int, default=12288)
     parser.add_argument("--timeout", type=float, default=900)
-    parser.add_argument("--run-dir", type=Path, default=Path("data/structure-runs"))
+    parser.add_argument("--run-dir", type=Path, default=Path("generate_embedding/data/structure-runs"))
     parser.add_argument("--prepare-only", action="store_true", help="Save the request and schema without contacting Ollama")
     args = parser.parse_args()
     if args.currency and not re.fullmatch(r"[A-Z]{3}", args.currency):

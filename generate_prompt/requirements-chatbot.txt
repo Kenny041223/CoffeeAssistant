@@ -1,0 +1,6 @@
+# Chatbot runtime deps. Everything now runs hosted (Pinecone + Gemini for
+# both embedding and reply generation) -- no GPU or local model needed.
+# Install into the main .venv:
+#   .\.venv\Scripts\python.exe -m pip install -r generate_prompt\requirements-chatbot.txt
+-r ../generate_embedding/requirements-pinecone.txt
+-r ../generate_embedding/requirements-gemini.txt

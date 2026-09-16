@@ -36,6 +36,15 @@ class ModelProduct(GroundedRecord):
     context: OptionalText
     aliases: list[Nonempty]
     category: OptionalText
+    # A bean/recipe that stays on the menu (house blend) vs one that rotates
+    # out when its batch finishes (seasonal specials). Null when the menu
+    # itself gives no such distinction for this product -- never guessed.
+    availability: Literal["permanent", "seasonal"] | None = None
+    # A marketing fact, not something read off a menu photo -- unlike every
+    # other field here it has no OCR evidence behind it, so it's set by
+    # direct human confirmation only (documented in `issues` when set) and
+    # defaults to False for every product the pipeline generates.
+    is_best_seller: bool = False
     description: OptionalText
     variants: list[MenuVariant]
     series: list[Nonempty]
@@ -88,7 +97,10 @@ class SourceRecord(StrictModel):
 
 
 class Generation(StrictModel):
-    method: Literal["qwen_batch"] = "qwen_batch"
+    # qwen_batch: one call generates the complete menu. qwen_staged: a global
+    # identity survey followed by independent per-item detail generation, so
+    # one broken item costs one small retry instead of the whole menu.
+    method: Literal["qwen_batch", "qwen_staged"] = "qwen_batch"
     model: Nonempty
     model_digest: Nonempty
     prompt_version: Nonempty
@@ -97,7 +109,8 @@ class Generation(StrictModel):
     response_sha256: Nonempty
     run_id: Nonempty
     run_directory: Nonempty
-    attempt_count: int = Field(ge=1, le=2)
+    attempt_count: int = Field(ge=1, le=12)
+    model_calls: int | None = Field(default=None, ge=1)
     generated_at: Nonempty
     duration_seconds: float = Field(ge=0)
     num_ctx: int = Field(gt=0)
@@ -107,7 +120,7 @@ class Generation(StrictModel):
 
 class StructuredMenu(ModelMenu):
     """The sole final menu file; model content plus operational provenance."""
-    schema_version: Literal[3] = 3
+    schema_version: Literal[5] = 5
     status: Literal["draft"] = "draft"
     products: list[MenuProduct]
     generation: Generation

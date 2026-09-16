@@ -1,4 +1,4 @@
-"""Transcribe menu images with local Qwen: python -m app.services.ocr --input image."""
+"""Transcribe menu images with local Qwen: python -m generate_embedding.ocr --input generate_embedding/image."""
 import argparse
 import base64
 import hashlib
@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import requests
 from PIL import Image, ImageOps
-from app.models.qwen_ocr import QwenDocument, QwenReading
+from generate_embedding.qwen_ocr import QwenDocument, QwenReading
 
 DEFAULT_MODEL = "qwen3-vl:4b-instruct"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
@@ -65,7 +65,7 @@ class QwenEngine:
         found = next((entry for entry in response.json().get("models", []) if entry["name"] == model), None)
         if found is None:
             raise ValueError(f"Model {model} is not downloaded on {self.base_url}. "
-                             "Use scripts/start-qwen.ps1 -PullModel for OCR or -PullTextModel for structuring.")
+                             "Use generate_embedding/scripts/start-qwen.ps1 -PullModel for OCR or -PullTextModel for structuring.")
         self.model_digest = found["digest"]
 
     def __call__(self, image: Image.Image) -> QwenReading:
@@ -125,8 +125,8 @@ def write_result(document: QwenDocument, output: Path, filename: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("image"))
-    parser.add_argument("--output", type=Path, default=Path("data/qwen-ocr"))
+    parser.add_argument("--input", type=Path, default=Path("generate_embedding/image"))
+    parser.add_argument("--output", type=Path, default=Path("generate_embedding/data/qwen-ocr"))
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11435")
     parser.add_argument("--timeout", type=float, default=600, help="Seconds per image")
@@ -143,7 +143,7 @@ def main() -> int:
         engine = QwenEngine(args.ollama_url, args.model, args.timeout,
                             num_ctx=args.num_ctx, num_predict=args.num_predict)
     except Exception as exc:
-        print(f"Cannot initialize local Qwen: {exc}\nStart it with scripts/start-qwen.ps1 -PullModel", file=sys.stderr)
+        print(f"Cannot initialize local Qwen: {exc}\nStart it with generate_embedding/scripts/start-qwen.ps1 -PullModel", file=sys.stderr)
         return 1
     summary = {"model": args.model, "model_digest": engine.model_digest, "processed": [], "failed": []}
     for source in images:

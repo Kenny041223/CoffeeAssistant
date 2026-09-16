@@ -1,0 +1,14 @@
+# Deps for connect_whatsapp/whatsapp_server.py, on top of the chatbot's own
+# deps (Pinecone + Gemini). Flask serves the webhook; requests calls out to
+# the WhatsApp Cloud API (Meta's Graph API) to send replies -- already
+# pulled in transitively by google-genai, not repinned here to avoid
+# fighting that resolution. Install into the main .venv:
+#   .\.venv\Scripts\python.exe -m pip install -r connect_whatsapp\requirements-whatsapp.txt
+-r ../generate_prompt/requirements-chatbot.txt
+flask==3.0.3
+requests>=2.32
+# Production WSGI server for a real deployment (e.g. Render) -- Flask's own
+# dev server (used locally by run_whatsapp_server.ps1) isn't meant for
+# that. POSIX-only (relies on os.fork()); installs fine on Windows but
+# won't run there -- that's expected, it's only used on the Linux host.
+gunicorn==23.0.0

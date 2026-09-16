@@ -4,8 +4,8 @@
 param(
     [switch]$SkipOcr,
     [switch]$PrepareOnly,
-    [string]$ImageInput = 'image',
-    [string]$OcrDirectory = 'data/qwen-ocr',
+    [string]$ImageInput = 'generate_embedding/image',
+    [string]$OcrDirectory = 'generate_embedding/data/qwen-ocr',
     [string]$Output = 'structure.json',
     [string]$PythonPath = '.venv/Scripts/python.exe',
     [string]$OllamaUrl = 'http://127.0.0.1:11434',
@@ -37,7 +37,7 @@ try {
         }
         Write-Output 'Transcribing menu images with Qwen vision...'
         $ocrArguments = @(
-            '-m', 'app.services.ocr',
+            '-m', 'generate_embedding.ocr',
             '--input', $ImageInput,
             '--output', $OcrDirectory,
             '--model', $VisionModel,
@@ -53,7 +53,7 @@ try {
     }
 
     $structureArguments = @(
-        '-m', 'app.services.structure_menu',
+        '-m', 'generate_embedding.structure_menu',
         '--input', $OcrDirectory,
         '--output', $Output,
         '--model', $TextModel,

@@ -15,7 +15,7 @@ python -m venv .venv
 ```
 
 Create a new virtual environment on the other PC instead of copying `.venv`.
-Copy the source project and `image/`; also copy `data/qwen-ocr/` if you want to
+Copy the source project and `generate_embedding/image/`; also copy `generate_embedding/data/qwen-ocr/` if you want to
 reuse earlier OCR. OCR results and model weights are ignored by Git and will
 not be present in a fresh clone.
 
@@ -36,7 +36,7 @@ For the portable setup, extract the official Windows archive so
 `.tools/ollama/ollama.exe` and its bundled GPU libraries exist. Then run:
 
 ```powershell
-.\scripts\start-qwen.ps1 -PullModel -PullTextModel
+.\generate_embedding\scripts\start-qwen.ps1 -PullModel -PullTextModel
 ```
 
 The helper starts a hidden local server at `127.0.0.1:11435`, stores weights
@@ -50,17 +50,17 @@ the helper leaves the server running.
 The run script uses the existing Python environment and models. It does not
 install Ollama or packages, download models, or start the server. Start the
 normal Ollama installation first, or start the portable server with
-`.\scripts\start-qwen.ps1` (without pull flags).
+`.\generate_embedding\scripts\start-qwen.ps1` (without pull flags).
 
 ```powershell
 # Normal Ollama installation: port 11434 is the script default
-.\scripts\generate_structureFile.ps1
+.\generate_embedding\generate_structureFile.ps1
 
 # Portable server: specify its separate port
-.\scripts\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
+.\generate_embedding\generate_structureFile.ps1 -OllamaUrl http://127.0.0.1:11435
 
 # Reuse existing OCR results
-.\scripts\generate_structureFile.ps1 -SkipOcr
+.\generate_embedding\generate_structureFile.ps1 -SkipOcr
 ```
 
 A missing model produces an error; the script does not pull it automatically.
@@ -69,19 +69,19 @@ A missing model produces an error; the script does not pull it automatically.
 
 ```powershell
 # All images in the image folder
-.\.venv\Scripts\python.exe -m app.services.ocr --input image --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --input generate_embedding/image --ollama-url http://127.0.0.1:11434
 
 # One image
-.\.venv\Scripts\python.exe -m app.services.ocr --input "image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg" --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --input "generate_embedding/image/WhatsApp Image 2026-09-08 at 10.25.06 PM.jpeg" --ollama-url http://127.0.0.1:11434
 
 # Portable Ollama server
-.\.venv\Scripts\python.exe -m app.services.ocr --ollama-url http://127.0.0.1:11435
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --ollama-url http://127.0.0.1:11435
 
 # A separate output folder for an experiment
-.\.venv\Scripts\python.exe -m app.services.ocr --output data/qwen-ocr/experiment-2 --ollama-url http://127.0.0.1:11434
+.\.venv\Scripts\python.exe -m generate_embedding.ocr --output generate_embedding/data/qwen-ocr/experiment-2 --ollama-url http://127.0.0.1:11434
 
 # Automated tests use mock inference; no model is loaded
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m unittest discover -s generate_embedding/tests -v
 ```
 
 Inputs are a single image or a nonrecursive folder. Supported extensions are
@@ -92,7 +92,7 @@ intentionally resize images; the runtime performs its own preprocessing.
 OCR defaults to temperature 0, `--num-ctx 8192`, `--num-predict 4096`, and
 `--timeout 600` seconds per image. The wrapper exposes these as `-OcrNumCtx`,
 `-OcrNumPredict`, and `-OcrTimeout`. The separate menu-generation step has a
-larger context and output budget; see [menu generation](menu-structure.md).
+larger context and output budget; see [menu generation](../generate_embedding/menu-structure.md).
 
 Truncated responses, malformed JSON, and server errors fail explicitly. OCR
 continues processing the remaining images and exits nonzero if any failed. The
@@ -100,7 +100,7 @@ wrapper stops before menu generation when OCR fails.
 
 ## Output and limitations
 
-`data/qwen-ocr/` contains one JSON file per image. `summary.json` records the
+`generate_embedding/data/qwen-ocr/` contains one JSON file per image. `summary.json` records the
 latest run and any failures. Repeated runs overwrite successful results for
 matching filenames; old results can remain when a later attempt fails. The
 menu generator uses the summary to determine the current batch and rejects

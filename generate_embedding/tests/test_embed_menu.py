@@ -1,4 +1,4 @@
-"""Mocked embedding checks, prepared for later execution; never load real models."""
+"""Mocked embedding checks, prepared for later execution; never call the real API."""
 import copy
 import hashlib
 import json
@@ -8,8 +8,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from app.models.embeddings import EMBEDDING_DIMENSIONS, QUERY_PROMPT, MenuEmbeddings
-from app.services.embed_menu import QwenEmbedder, build_embeddings, read_menu, validate_vectors
+from google.genai import types as genai_types
+
+from generate_embedding.embeddings import (
+    DOCUMENT_TASK_TYPE, EMBEDDING_DIMENSIONS, QUERY_TASK_TYPE, MenuEmbeddings,
+)
+from generate_embedding.embed_menu import GeminiEmbedder, build_embeddings, read_menu, validate_vectors
 
 
 def unit_vector(index=0):
@@ -28,7 +32,7 @@ def menu_payload():
             search_text=f"{name}: {description}",
         ))
     return dict(
-        schema_version=3, status="draft", products=products, series=[], addons=[], issues=[],
+        schema_version=5, status="draft", products=products, series=[], addons=[], issues=[],
         source_notes=[dict(source_id="source-01", notes=[])], product_count=2, source_count=1,
         currency=None, currency_source="unspecified",
         sources=[dict(source_id="source-01", ocr_file="menu.png.json", ocr_sha256="0" * 64,
@@ -52,34 +56,40 @@ class EmbeddingTests(unittest.TestCase):
         self.input.write_text(json.dumps(menu_payload()), encoding="utf-8")
 
     @staticmethod
-    def fake_model_embedder():
-        embedder = object.__new__(QwenEmbedder)
+    def fake_response(vectors):
+        """A fake google-genai embed_content response for the given raw (possibly
+        un-normalized, matching real truncated-dimension API behavior) vectors."""
+        return SimpleNamespace(embeddings=[SimpleNamespace(values=v) for v in vectors])
+
+    @staticmethod
+    def fake_gemini_embedder(max_length=512):
+        embedder = object.__new__(GeminiEmbedder)
         embedder.batch_size = 2
-        embedder.max_length = 512
-        embedder.device = "cpu"
-        embedder.model = Mock()
-        embedder.model.tokenizer.return_value = {"length": [20]}
-        embedder.model.encode.return_value.tolist.return_value = [unit_vector()]
+        embedder.max_length = max_length
+        embedder._types = genai_types
+        embedder.client = Mock()
         return embedder
 
     def test_one_vector_per_product_without_copying_menu_facts(self):
         original = self.input.read_bytes()
         expected = [unit_vector(), unit_vector(1)]
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor:
             constructor.return_value.encode_documents.return_value = expected
-            result = build_embeddings(self.input, self.output)
+            result = build_embeddings(self.input, self.output, api_key="test-key")
         constructor.return_value.encode_documents.assert_called_once_with(
             [p["search_text"] for p in menu_payload()["products"]])
         self.assertEqual(self.input.read_bytes(), original)
         self.assertEqual(result.menu_sha256, hashlib.sha256(original).hexdigest())
         saved = MenuEmbeddings.model_validate_json(self.output.read_bytes())
         self.assertEqual(saved.product_count, 2)
+        self.assertEqual(saved.provider, "gemini")
         for row, product, vector in zip(saved.products, menu_payload()["products"], expected):
             self.assertEqual(row.product_id, product["product_id"])
             self.assertEqual(row.vector, vector)
             self.assertEqual(row.text_sha256, hashlib.sha256(product["search_text"].encode()).hexdigest())
             self.assertEqual(set(row.model_dump()), {"product_id", "text_sha256", "vector"})
-        self.assertEqual(saved.recipe.query_prompt, QUERY_PROMPT)
+        self.assertEqual(saved.recipe.document_task_type, DOCUMENT_TASK_TYPE)
+        self.assertEqual(saved.recipe.query_task_type, QUERY_TASK_TYPE)
 
     def test_bad_menu_is_rejected_before_model_construction(self):
         bad_menus = []
@@ -104,7 +114,7 @@ class EmbeddingTests(unittest.TestCase):
         payload["products"][0]["evidence"][0]["quote"] = "Invented ingredients"
         bad_menus.append(payload)
         for payload in bad_menus:
-            with self.subTest(payload=payload), patch("app.services.embed_menu.QwenEmbedder") as constructor:
+            with self.subTest(payload=payload), patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor:
                 self.input.write_text(json.dumps(payload), encoding="utf-8")
                 with self.assertRaises(ValueError):
                     build_embeddings(self.input, self.output)
@@ -120,7 +130,7 @@ class EmbeddingTests(unittest.TestCase):
 
     def test_output_cannot_replace_source_menu(self):
         original = self.input.read_bytes()
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor:
             with self.assertRaisesRegex(ValueError, "overwrite"):
                 build_embeddings(self.input, self.input)
             constructor.assert_not_called()
@@ -140,9 +150,9 @@ class EmbeddingTests(unittest.TestCase):
 
     def test_failed_or_partial_inference_preserves_existing_artifact(self):
         self.output.write_bytes(b"previous complete artifact")
-        for response in (RuntimeError("CUDA out of memory"), [unit_vector()]):
+        for response in (RuntimeError("API unavailable"), [unit_vector()]):
             with self.subTest(response=type(response).__name__), \
-                 patch("app.services.embed_menu.QwenEmbedder") as constructor:
+                 patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor:
                 encoder = constructor.return_value.encode_documents
                 if isinstance(response, Exception):
                     encoder.side_effect = response
@@ -159,7 +169,7 @@ class EmbeddingTests(unittest.TestCase):
             self.input.write_bytes(self.input.read_bytes() + b"\n")
             return [unit_vector(), unit_vector(1)]
 
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor:
+        with patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor:
             constructor.return_value.encode_documents.side_effect = change_menu
             with self.assertRaisesRegex(ValueError, "changed"):
                 build_embeddings(self.input, self.output)
@@ -167,7 +177,7 @@ class EmbeddingTests(unittest.TestCase):
 
     def test_publish_failure_cleans_temporary_file(self):
         self.output.write_bytes(b"previous complete artifact")
-        with patch("app.services.embed_menu.QwenEmbedder") as constructor, \
+        with patch("generate_embedding.embed_menu.GeminiEmbedder") as constructor, \
              patch.object(Path, "replace", side_effect=OSError("file locked")):
             constructor.return_value.encode_documents.return_value = [unit_vector(), unit_vector(1)]
             with self.assertRaises(OSError):
@@ -175,40 +185,47 @@ class EmbeddingTests(unittest.TestCase):
         self.assertEqual(self.output.read_bytes(), b"previous complete artifact")
         self.assertEqual(list(self.folder.glob("*.tmp")), [])
 
-    def test_documents_and_queries_use_their_correct_prompt(self):
-        embedder = self.fake_model_embedder()
+    def test_documents_and_queries_use_their_correct_task_type(self):
+        embedder = self.fake_gemini_embedder()
+        embedder.client.models.embed_content.return_value = self.fake_response([unit_vector()])
         embedder.encode_documents(["Latte with milk"])
-        self.assertEqual(embedder.model.encode.call_args.kwargs["prompt"], "")
-        vector = embedder.encode_query("Something creamy")
-        self.assertEqual(vector, unit_vector())
-        self.assertEqual(embedder.model.encode.call_args.kwargs["prompt"], QUERY_PROMPT)
-        self.assertTrue(embedder.model.encode.call_args.kwargs["normalize_embeddings"])
-        self.assertEqual(embedder.model.tokenizer.call_args.args[0], [QUERY_PROMPT + "Something creamy"])
+        config = embedder.client.models.embed_content.call_args.kwargs["config"]
+        self.assertEqual(config.task_type, DOCUMENT_TASK_TYPE)
+        self.assertEqual(config.output_dimensionality, EMBEDDING_DIMENSIONS)
+
+        embedder.client.models.embed_content.return_value = self.fake_response([unit_vector()])
+        embedder.encode_query("Something creamy")
+        config = embedder.client.models.embed_content.call_args.kwargs["config"]
+        self.assertEqual(config.task_type, QUERY_TASK_TYPE)
+
+    def test_unnormalized_raw_vectors_are_normalized_before_publishing(self):
+        # Real API behavior for a truncated (non-native) output_dimensionality:
+        # the raw vector is NOT pre-normalized. This must be caught and fixed
+        # client-side, not just validated and rejected.
+        raw = [2.0] + [0.0] * (EMBEDDING_DIMENSIONS - 1)
+        embedder = self.fake_gemini_embedder()
+        embedder.client.models.embed_content.return_value = self.fake_response([raw])
+        vectors = embedder.encode_documents(["Something"])
+        norm = sum(v * v for v in vectors[0]) ** 0.5
+        self.assertAlmostEqual(norm, 1.0)
+        self.assertAlmostEqual(vectors[0][0], 1.0)
 
     def test_overlong_input_is_rejected_before_any_embedding(self):
-        embedder = self.fake_model_embedder()
-        embedder.model.tokenizer.side_effect = [{"length": [10, 20]}, {"length": [513]}]
-        with self.assertRaisesRegex(ValueError, "not truncated"):
-            embedder.encode_documents(["First", "Second", "Third"])
-        embedder.model.encode.assert_not_called()
+        embedder = self.fake_gemini_embedder(max_length=5)  # ~20 chars allowed
+        with self.assertRaisesRegex(ValueError, "max-length"):
+            embedder.encode_documents(["this text is definitely far too long for the limit"])
+        embedder.client.models.embed_content.assert_not_called()
 
     def test_empty_query_is_rejected(self):
-        embedder = self.fake_model_embedder()
+        embedder = self.fake_gemini_embedder()
         with self.assertRaises(ValueError):
             embedder.encode_query("  ")
-        embedder.model.encode.assert_not_called()
+        embedder.client.models.embed_content.assert_not_called()
 
-    def test_missing_cuda_does_not_download_or_fall_back_to_cpu(self):
-        cuda = Mock()
-        cuda.is_available.return_value = False
-        constructor = Mock()
-        with patch.dict("sys.modules", {
-            "torch": SimpleNamespace(cuda=cuda),
-            "sentence_transformers": SimpleNamespace(SentenceTransformer=constructor),
-        }):
-            with self.assertRaisesRegex(RuntimeError, "CUDA is unavailable"):
-                QwenEmbedder()
-        constructor.assert_not_called()
+    def test_missing_api_key_is_rejected_before_any_network_call(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "GEMINI_API_KEY"):
+                GeminiEmbedder(api_key=None)
 
 
 if __name__ == "__main__":
