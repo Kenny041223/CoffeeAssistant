@@ -1,186 +1,173 @@
-# WhatsApp deployment and operations
+# WhatsApp integration
 
-The webhook validates Meta's signature, parses all text messages in the batch,
-and commits them to SQLite before returning HTTP 200. A separate worker retrieves
-menu facts, generates a reply, saves it, and sends it through the Graph API.
+Connects the existing chatbot ([`generate_prompt/chatbot.py`](../generate_prompt/chatbot.py))
+to WhatsApp via Meta's official **WhatsApp Cloud API** (the WhatsApp
+Business Platform), so a message sent to your business's WhatsApp number
+gets a reply from the bot instead of a person.
 
 ```text
-Meta -> HTTPS webhook -> durable inbox -> worker -> saved reply -> Graph API
-                              |             |
-                        message IDs     bounded sessions
+Customer's WhatsApp  --->  Meta's servers  --->  POST /webhook  --->  this server
+                                                                          |
+                                                                    chatbot.py's
+                                                                 reply() (same
+                                                              logic as the terminal
+                                                                    chatbot)
+                                                                          |
+Customer's WhatsApp  <---  Meta's servers  <---  Graph API "send message" call
 ```
 
-## Supported deployment
+No reply logic lives in the WhatsApp code -- [`connect_whatsapp/whatsapp_server.py`](whatsapp_server.py)
+only does the WhatsApp-specific plumbing (receiving Meta's webhook calls,
+sending replies back through Meta's Graph API) and calls straight into the
+same `build_engine()`/`reply()` core the terminal chatbot uses. Every prompt
+fix from live-testing the terminal bot applies here unchanged.
 
-This implementation is intended for a low-volume shop on **one host with a local
-persistent disk**. Multiple web and worker processes may share that database;
-transactions and renewable leases serialize each customer's messages. Different
-customers can be handled by different worker processes.
+## Why the Cloud API, not your personal WhatsApp app
 
-Do not put the database on NFS/SMB or deploy web and worker to separate machines
-with independent disks. [SQLite WAL requires processes on the same host](https://www.sqlite.org/wal.html).
-For replicas on separate hosts, replace this store with a shared transactional
-database/queue before scaling. An ephemeral/free web-service filesystem is not
-a durable deployment for this design.
+This is Meta's own, sanctioned way for a business to connect a bot to
+WhatsApp -- no risk of your number being flagged for automation, unlike
+unofficial "scan a QR code" libraries that puppet the regular consumer app.
+The trade-off is more setup: a Meta Business/Developer account, a phone
+number registered specifically for WhatsApp Business (see below), and a
+server with a public HTTPS address that's reachable any time a customer
+might message.
 
-## Configuration
+## 1. Meta setup
 
-Use an existing Meta WhatsApp Business app and registered business number. Set up
-the app, messaging access token, and webhook subscription using the
-[official Cloud API documentation](https://developers.facebook.com/docs/whatsapp/cloud-api/).
-Subscribe the callback URL `https://your-domain/webhook` to the `messages` field.
-Set its verify token to the same value as `WHATSAPP_VERIFY_TOKEN`.
+1. Create a Meta Developer account at [developers.facebook.com](https://developers.facebook.com/)
+   if you don't have one, and a Business account at
+   [business.facebook.com](https://business.facebook.com/) if you don't
+   have one of those either.
+2. At [developers.facebook.com/apps](https://developers.facebook.com/apps),
+   create a new app, type **Business**.
+3. Add the **WhatsApp** product to the app.
+4. Meta gives you a **test phone number** for free during development --
+   good enough to build and test everything below. It can only message
+   numbers you've added as testers in the app dashboard. When you're ready
+   for real customers, add your shop's own number as the WhatsApp Business
+   number instead (Meta walks you through verifying it) -- **it can't be a
+   number currently active in the regular WhatsApp consumer app**; it has
+   to be dedicated to the Business Platform.
+5. From the app's WhatsApp > API Setup page, note down:
+   - **Phone number ID** -- `WHATSAPP_PHONE_NUMBER_ID`
+   - **Temporary access token** shown there is only valid ~24 hours; for
+     anything beyond quick testing, generate a **permanent** token instead
+     (System Users, under Business Settings > Users > System Users -- create
+     one, assign it the WhatsApp app with `whatsapp_business_messaging`
+     permission, generate its token) -- `WHATSAPP_ACCESS_TOKEN`
+6. From the app's Settings > Basic page, note the **App Secret** (click
+   "Show") -- `WHATSAPP_APP_SECRET`. This is used to verify that webhook
+   calls actually came from Meta (see `verify_signature()` in
+   `whatsapp_server.py`) rather than trust any POST to the URL.
+7. Make up your own random string for `WHATSAPP_VERIFY_TOKEN` -- it's not
+   from Meta, you choose it and enter the same value in two places (your
+   `.env` and the webhook config below) so Meta's one-time setup handshake
+   can confirm it's really your server on the other end.
 
-Copy the keys from [`.env.example`](../.env.example) into local `.env`, or supply
-them through your deployment's secret/environment configuration. Never commit
-real credentials. The PowerShell launchers load `.env` as data; Python and
-Gunicorn entry points read process environment variables only.
+Add all four to your `.env` (never commit or print these):
 
-| Variable | Used by | Meaning |
-| --- | --- | --- |
-| `WHATSAPP_PHONE_NUMBER_ID` | Both | Registered business number ID; also binds the database to this number |
-| `WHATSAPP_DB_PATH` | Both | Same absolute path on persistent local disk in production |
-| `WHATSAPP_VERIFY_TOKEN` | Webhook | Token chosen for the subscription handshake |
-| `WHATSAPP_APP_SECRET` | Webhook | Secret used to verify Meta HMAC signatures |
-| `WHATSAPP_ACCESS_TOKEN` | Worker | Graph API messaging credential |
-| `GEMINI_API_KEY` | Worker | Embedding and response generation |
-| `PINECONE_API_KEY` | Worker | Menu retrieval |
-| `WHATSAPP_GRAPH_VERSION` | Worker | Graph API version; defaults to `v21.0` |
-| `MENU_FILE` | Worker | Defaults to `structure.json` |
-| `PINECONE_INDEX` | Worker | Defaults to `coffee-menu` |
-| `PINECONE_NAMESPACE` | Worker | Defaults to the default namespace |
-| `CHATBOT_TOP_K` | Worker | Between 1 and 50; defaults to 15 |
-| `GEMINI_MODEL` | Worker | Defaults to `gemini-3.5-flash-lite` |
-| `SHOP_POLICIES_FILE` | Worker | Defaults to `generate_prompt/shop_policies.json` |
+```
+WHATSAPP_ACCESS_TOKEN=...
+WHATSAPP_PHONE_NUMBER_ID=...
+WHATSAPP_VERIFY_TOKEN=...
+WHATSAPP_APP_SECRET=...
+```
 
-## Local development on Windows
-
-Install dependencies from the project root:
+## 2. Install and run the server
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r connect_whatsapp\requirements-whatsapp.txt
-```
-
-Run each command in a separate terminal:
-
-```powershell
 .\connect_whatsapp\run_whatsapp_server.ps1
-.\connect_whatsapp\run_whatsapp_worker.ps1
 ```
 
-The webhook listens on `127.0.0.1:8000`. Point an HTTPS development tunnel at that
-port and configure its `/webhook` URL in Meta. Both launchers use
-`connect_whatsapp/data/messages.sqlite3` unless `WHATSAPP_DB_PATH` overrides it.
-The worker must be running for queued messages to receive replies.
+This starts a Flask server on `0.0.0.0:8000` (override with `-Port`) and
+**keeps running** -- it's a server, not a one-shot script. It won't do
+anything useful until Meta's webhook is pointed at it (next step), since
+nothing calls it locally.
 
-## Production startup on Linux
+## 3. Get a public HTTPS URL
 
-Install the repository and virtual environment at `/opt/coffee-assistant`, create
-a dedicated `coffee` service user, and store credentials in a root-owned
-`/etc/coffee-assistant.env` readable only by the service manager. In that file set:
+Meta needs a **public HTTPS URL** for your server's `/webhook` route --
+`http://localhost:8000` is not reachable from Meta's side. Pick one path:
 
-```text
-WHATSAPP_DB_PATH=/var/lib/coffee-assistant/messages.sqlite3
-```
+**Local testing** -- expose your machine with a tunnel, e.g.
+[ngrok](https://ngrok.com/) (`ngrok http 8000`) or
+[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+(`cloudflared tunnel --url http://localhost:8000`, no account needed). Either
+prints a public `https://...` URL that forwards to your local
+`run_whatsapp_server.ps1`. It changes every time you restart the tunnel on
+the free tier, so you'll re-enter it in Meta's dashboard each session.
 
-The example units [coffee-web.service](deploy/coffee-web.service) and
-[coffee-worker.service](deploy/coffee-worker.service) supervise the two processes,
-create the private state directory, and restart failed processes. Adjust paths
-and service user to the host before installing/enabling these units. They are
-templates; nothing in the repository installs a service automatically.
+**Render** (a real, always-on deployment) -- this app is ready to deploy as-is:
 
-The underlying start commands, run from the project root with environment set:
+1. Push this repo to GitHub if it isn't already (Render deploys from a
+   connected GitHub repo).
+2. In the Render dashboard: **New > Web Service**, connect the repo, pick
+   the branch to deploy.
+3. Settings:
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install -r connect_whatsapp/requirements-whatsapp.txt`
+   - **Start Command**: `gunicorn 'connect_whatsapp.whatsapp_server:make_app()' --bind 0.0.0.0:$PORT`
+     (Render sets `$PORT` itself. The trailing `()` after `make_app` is
+     gunicorn's own syntax for "call this as a zero-argument factory to get
+     the real app" -- not a flag; gunicorn has no `--factory` option, that's
+     a different tool's convention, e.g. uvicorn's. `make_app()` in
+     `whatsapp_server.py` reads all config from environment variables
+     instead of CLI flags, since gunicorn imports the module rather than
+     running it as a script.)
+   - **Instance type**: the free tier is fine to start.
+4. **Environment** tab: add each of the six required variables --
+   `PINECONE_API_KEY`, `GEMINI_API_KEY`, `WHATSAPP_ACCESS_TOKEN`,
+   `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`
+   -- same values as your local `.env` (never commit `.env` itself; Render's
+   Environment tab is the equivalent for a deployed service).
+5. Deploy. Render gives you a permanent URL like
+   `https://your-service.onrender.com` -- use
+   `https://your-service.onrender.com/webhook` as the Callback URL below.
+6. Render's free tier spins the service down after inactivity and takes a
+   few seconds to wake back up on the next request -- the first message
+   after a quiet period may reply slowly. An always-on (paid) instance
+   avoids that; not a problem worth solving before you've confirmed the
+   bot works at all.
 
-```sh
-.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 'connect_whatsapp.whatsapp_server:make_app()'
-.venv/bin/python -m connect_whatsapp.message_worker
-```
+Then in the Meta app dashboard, under WhatsApp > Configuration:
 
-Put the webhook behind an HTTPS reverse proxy. Keep the database outside the
-application release directory and restrict its directory to the service user.
-The same directory contains SQLite's WAL/SHM files. Back up the database through
-SQLite's online backup API, or stop **both** services before copying it; copying
-only the main file while it is running can omit committed WAL data.
+1. **Callback URL**: `https://<your-url>/webhook`
+2. **Verify token**: the same string you put in `WHATSAPP_VERIFY_TOKEN`
+3. Click **Verify and save** -- Meta calls your server's `GET /webhook`
+   once to confirm it gets the expected challenge back
+   (`verify_webhook()` in `whatsapp_server.py` handles this).
+4. Under **Webhook fields**, subscribe to `messages`.
 
-Gunicorn calls factories using the quoted `module:function()` expression;
-there is no `--factory` switch. See [Flask's deployment documentation](https://flask.palletsprojects.com/en/stable/deploying/gunicorn/).
+## 4. Test it
 
-## Delivery behavior
+Message the test number (or your verified business number) from a phone
+that's registered as a tester in the Meta app -- "I want to order a
+coffee" should get a reply within a few seconds. Watch the server's log
+output for each request; `GET /health` on your server reports how many
+conversations are currently in memory.
 
-- Every supported message in every entry/change is processed. Other business
-  numbers and unsupported media/status events are ignored. Invalid text batches
-  receive 400; failed persistence receives 503, never a successful acknowledgment.
-- Repeated incoming message IDs do not regenerate or resend completed replies.
-  Deduplication records remain for eight days after completion.
-- Only the earliest unfinished message for a customer can be claimed. Retries
-  keep later messages for that customer waiting while other customers proceed.
-- Claims have a 90-second lease, renewed every 20 seconds. A crashed worker's
-  job can be reclaimed; stale claim tokens cannot update stored state.
-- Replies are saved before sending. Network failures, HTTP 408/429 and HTTP 5xx
-  are retried with exponential backoff, up to five attempts. Other Graph HTTP
-  errors become failed jobs immediately. Generation failures also have a bounded
-  retry budget. Conversation state advances only after Graph accepts the reply.
-- **Outgoing delivery is at-least-once.** A remote acceptance followed by a lost
-  response, or a crash before the completion commit, can cause a duplicate send.
-  The Graph send and SQLite commit are not one transaction. Saved replies prevent
-  duplicate model generation on send retries, but do not guarantee exactly-once
-  delivery. `sent` means accepted by Graph, not confirmed read/delivered.
-- Jobs older than 24 hours are failed without sending a free-form reply. Template
-  messages and a real ordering/payment flow are not implemented.
+## Still open
 
-## Monitoring and recovery
-
-`GET /health` checks web-process liveness. `GET /ready` checks database access and
-recent worker heartbeats, returning 503 if either is unavailable. It includes
-pending/processing/failed counts without customer text. A live worker with failed
-jobs returns 200 with `status: degraded`; alert on `failed > 0`, growing pending
-counts, missing workers and low disk space. Do not use failed-job alerts to trigger
-an automatic restart loop.
-
-Inspect queue counts and up to 100 failed job IDs with sanitized errors:
-
-```powershell
-.\connect_whatsapp\run_whatsapp_worker.ps1 -Status
-```
-
-After correcting credentials or another underlying failure, retry a failed job:
-
-```powershell
-.\connect_whatsapp\run_whatsapp_worker.ps1 -RetryFailed 'wamid.example'
-```
-
-On Linux, the equivalent options are `python -m connect_whatsapp.message_worker
---status` and `--retry-failed MESSAGE_ID`. Retry is refused after the 24-hour
-window or when newer messages from the customer exist; ask the customer to send
-a new message in those cases. Failed jobs remain for 30 days for investigation.
-Logs and the status command omit message bodies, phone numbers and credentials.
-
-Idle sessions expire after 24 hours. Each session retains at most six complete
-turns and 12,000 characters of dialogue. Retrieved menu blocks are supplied fresh
-and are never stored in dialogue history. Completed job bodies are cleared,
-while pending/failed jobs retain the data needed for retry. The database contains
-customer data and belongs in restricted storage and backups.
-
-## Updating menus
-
-Generate/review the menu, regenerate embeddings, then run the sync's dry run and
-sync to the intended dedicated index/namespace. Incomplete/duplicate embedding
-sets and mismatched counts are rejected before any write or deletion.
-For a live update, stop the worker during sync and restart it with the matching
-menu file afterward; the webhook can keep queueing messages. An existing saved
-outgoing reply is retained across retries, so drain/reconcile outgoing retries
-before changing prices. Changed menu/policy/prompt fingerprints reset old
-dialogue on the next generated reply.
-
-## Verification
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s connect_whatsapp/tests -v
-.\.venv\Scripts\python.exe -m unittest discover -s generate_prompt/tests -v
-.\.venv\Scripts\python.exe -m unittest discover -s generate_embedding/tests -v
-```
-
-Tests use real temporary SQLite databases, concurrent requests/processes, and
-mocked model/Graph boundaries. CI runs the suites on Windows and Linux and checks
-the Gunicorn factory on Linux. A staging WhatsApp round trip is still required
-to verify real credentials, provider permissions, HTTPS routing and response quality.
+- **In-memory conversation state only**: `conversations` (one per phone
+  number) lives in a plain dict inside the running process -- lost on
+  restart, and won't work correctly if you ever run more than one worker
+  process/replica (each would have its own, inconsistent dict). Fine for a
+  single-process demo; a real deployment would move this to a shared store
+  (e.g. Redis) keyed by phone number.
+- **The 24-hour customer service window**: WhatsApp's own rule, not
+  something this code controls -- a business can only send free-form
+  replies within 24 hours of the customer's last message. Outside that
+  window, only pre-approved *message templates* can be sent, which this
+  server doesn't implement. In practice: as long as the customer messaged
+  recently, replies work as built; a very delayed reply attempt will fail
+  at the Graph API call (logged, not silently lost -- see
+  `send_whatsapp_message`'s error handling).
+- **Text messages only**: images, voice notes, locations, etc. are
+  received and silently ignored (`extract_incoming_text_message` returns
+  `None` for anything but `type == "text"`), not answered.
+- **No message de-duplication**: Meta can occasionally redeliver the same
+  webhook event; a redelivered message currently gets a second reply
+  generated and sent rather than being recognized as a repeat.
+- **No real ordering/checkout flow**, same limitation as the terminal
+  chatbot -- see [customer-assistant-notes.md](../docs/customer-assistant-notes.md).
