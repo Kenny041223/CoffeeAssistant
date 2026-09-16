@@ -1,236 +1,176 @@
-"""Offline checks for the WhatsApp webhook bridge; never touch the real
-Meta Graph API, Gemini, or Pinecone."""
+"""Webhook and Graph API boundary tests; no external services."""
 import hashlib
 import hmac
 import json
+import sqlite3
 import tempfile
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import requests
+
+from connect_whatsapp.message_store import MessageStore
 from connect_whatsapp.whatsapp_server import (
-    REQUIRED_ENV_VARS, create_app, extract_incoming_text_message, make_app,
-    send_whatsapp_message, verify_signature,
+    DeliveryError, REQUIRED_ENV_VARS, create_app,
+    make_app, send_whatsapp_message, verify_signature,
 )
-from generate_prompt.chatbot import ChatEngine, Conversation
 
-APP_SECRET = "test-app-secret"
-VERIFY_TOKEN = "test-verify-token"
-ACCESS_TOKEN = "test-access-token"
-PHONE_NUMBER_ID = "1234567890"
+SECRET = "test-secret"
+PHONE_ID = "12345"
 
 
-def sign(payload: bytes) -> str:
-    return "sha256=" + hmac.new(APP_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+def payload(*ids):
+    return {"object": "whatsapp_business_account", "entry": [{"changes": [{"field": "messages", "value": {
+        "metadata": {"phone_number_id": PHONE_ID},
+        "messages": [{"id": mid, "from": "60123456789", "timestamp": str(int(time.time())),
+                      "type": "text", "text": {"body": "coffee please"}} for mid in ids],
+    }}]}]}
 
 
-def text_message_payload(from_number: str = "60123456789", body: str = "I want to order a coffee") -> dict:
-    return {
-        "entry": [{
-            "changes": [{
-                "value": {
-                    "messages": [{"from": from_number, "type": "text", "text": {"body": body}}],
-                },
-            }],
-        }],
-    }
+def sign(body):
+    return "sha256=" + hmac.new(SECRET.encode(), body, hashlib.sha256).hexdigest()
 
 
-class VerifySignatureTests(unittest.TestCase):
-    def test_matching_signature_is_accepted(self):
-        payload = b'{"hello": "world"}'
-        self.assertTrue(verify_signature(APP_SECRET, payload, sign(payload)))
-
-    def test_wrong_secret_is_rejected(self):
-        payload = b'{"hello": "world"}'
-        bad_signature = hmac.new(b"wrong-secret", payload, hashlib.sha256).hexdigest()
-        self.assertFalse(verify_signature(APP_SECRET, payload, f"sha256={bad_signature}"))
-
-    def test_tampered_payload_is_rejected(self):
-        signature = sign(b'{"hello": "world"}')
-        self.assertFalse(verify_signature(APP_SECRET, b'{"hello": "mallory"}', signature))
-
-    def test_missing_or_malformed_header_is_rejected(self):
-        payload = b'{"hello": "world"}'
-        self.assertFalse(verify_signature(APP_SECRET, payload, None))
-        self.assertFalse(verify_signature(APP_SECRET, payload, "not-sha256-prefixed"))
-
-
-class ExtractIncomingTextMessageTests(unittest.TestCase):
-    def test_text_message_is_extracted(self):
-        result = extract_incoming_text_message(text_message_payload("60111222333", "hello there"))
-        self.assertEqual(result, ("60111222333", "hello there"))
-
-    def test_status_callback_with_no_messages_is_ignored(self):
-        payload = {"entry": [{"changes": [{"value": {"statuses": [{"status": "delivered"}]}}]}]}
-        self.assertIsNone(extract_incoming_text_message(payload))
-
-    def test_non_text_message_type_is_ignored(self):
-        payload = text_message_payload()
-        payload["entry"][0]["changes"][0]["value"]["messages"][0]["type"] = "image"
-        self.assertIsNone(extract_incoming_text_message(payload))
-
-    def test_malformed_payload_is_ignored_not_raised(self):
-        self.assertIsNone(extract_incoming_text_message({}))
-        self.assertIsNone(extract_incoming_text_message({"entry": []}))
-        self.assertIsNone(extract_incoming_text_message({"entry": [{"changes": []}]}))
-
-
-class SendWhatsappMessageTests(unittest.TestCase):
-    def test_posts_the_expected_graph_api_request(self):
-        response = Mock(status_code=200)
-        with patch("connect_whatsapp.whatsapp_server.requests.post", return_value=response) as post:
-            send_whatsapp_message(ACCESS_TOKEN, PHONE_NUMBER_ID, "60123456789", "Hello!")
-        post.assert_called_once()
-        _, kwargs = post.call_args
-        self.assertIn(PHONE_NUMBER_ID, post.call_args[0][0])
-        self.assertEqual(kwargs["headers"]["Authorization"], f"Bearer {ACCESS_TOKEN}")
-        self.assertEqual(kwargs["json"], {
-            "messaging_product": "whatsapp", "to": "60123456789",
-            "type": "text", "text": {"body": "Hello!"},
-        })
-
-    def test_error_response_raises_instead_of_failing_silently(self):
-        response = Mock(status_code=401, text="Invalid OAuth token")
-        response.raise_for_status.side_effect = Exception("401")
-        with patch("connect_whatsapp.whatsapp_server.requests.post", return_value=response):
-            with self.assertRaises(Exception):
-                send_whatsapp_message(ACCESS_TOKEN, PHONE_NUMBER_ID, "60123456789", "Hello!")
-
-
-def fake_engine() -> ChatEngine:
-    return ChatEngine(menu_by_id={}, embedder=Mock(), index=Mock(), top_k=15,
-                       genai_client=Mock(), gemini_model="gemini-3.5-flash-lite",
-                       system_instruction="You are a test bot.")
-
-
-class WebhookRouteTests(unittest.TestCase):
-    def setUp(self):
-        self.engine = fake_engine()
-        self.app = create_app(self.engine, ACCESS_TOKEN, PHONE_NUMBER_ID, VERIFY_TOKEN, APP_SECRET)
-        self.client = self.app.test_client()
-
-    def test_get_webhook_with_correct_token_echoes_challenge(self):
-        response = self.client.get("/webhook", query_string={
-            "hub.mode": "subscribe", "hub.verify_token": VERIFY_TOKEN, "hub.challenge": "12345",
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_data(as_text=True), "12345")
-
-    def test_get_webhook_with_wrong_token_is_forbidden(self):
-        response = self.client.get("/webhook", query_string={
-            "hub.mode": "subscribe", "hub.verify_token": "wrong", "hub.challenge": "12345",
-        })
-        self.assertEqual(response.status_code, 403)
-
-    def test_post_webhook_without_valid_signature_is_forbidden(self):
-        body = json.dumps(text_message_payload()).encode("utf-8")
-        response = self.client.post("/webhook", data=body, content_type="application/json",
-                                     headers={"X-Hub-Signature-256": "sha256=wrong"})
-        self.assertEqual(response.status_code, 403)
-
-    def test_post_webhook_with_no_new_message_is_acknowledged_and_ignored(self):
-        payload = {"entry": [{"changes": [{"value": {"statuses": [{"status": "read"}]}}]}]}
-        body = json.dumps(payload).encode("utf-8")
-        response = self.client.post("/webhook", data=body, content_type="application/json",
-                                     headers={"X-Hub-Signature-256": sign(body)})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["status"], "ignored")
-
-    def test_valid_text_message_gets_a_reply_sent_back(self):
-        body = json.dumps(text_message_payload("60123456789", "I want to order a coffee")).encode("utf-8")
-        with patch("connect_whatsapp.whatsapp_server.new_conversation") as mock_new_conv, \
-             patch("connect_whatsapp.whatsapp_server.reply", return_value="Sure, what would you like?") as mock_reply, \
-             patch("connect_whatsapp.whatsapp_server.send_whatsapp_message") as mock_send:
-            mock_new_conv.return_value = Conversation(chat=Mock())
-            response = self.client.post("/webhook", data=body, content_type="application/json",
-                                         headers={"X-Hub-Signature-256": sign(body)})
-        self.assertEqual(response.status_code, 200)
-        mock_reply.assert_called_once()
-        self.assertEqual(mock_reply.call_args[0][2], "I want to order a coffee")
-        mock_send.assert_called_once_with(ACCESS_TOKEN, PHONE_NUMBER_ID, "60123456789",
-                                           "Sure, what would you like?")
-
-    def test_same_phone_number_reuses_its_conversation_across_messages(self):
-        with patch("connect_whatsapp.whatsapp_server.new_conversation") as mock_new_conv, \
-             patch("connect_whatsapp.whatsapp_server.reply", return_value="ok") as mock_reply, \
-             patch("connect_whatsapp.whatsapp_server.send_whatsapp_message"):
-            mock_new_conv.return_value = Conversation(chat=Mock())
-            for _ in range(2):
-                body = json.dumps(text_message_payload("60123456789", "hi")).encode("utf-8")
-                self.client.post("/webhook", data=body, content_type="application/json",
-                                  headers={"X-Hub-Signature-256": sign(body)})
-        # A brand-new Conversation is only created once; the second message
-        # for the same customer reuses it (same object passed to reply()).
-        mock_new_conv.assert_called_once()
-        first_conversation = mock_reply.call_args_list[0][0][1]
-        second_conversation = mock_reply.call_args_list[1][0][1]
-        self.assertIs(first_conversation, second_conversation)
-
-    def test_reply_failure_still_returns_200_with_a_fallback_message(self):
-        body = json.dumps(text_message_payload("60123456789", "hi")).encode("utf-8")
-        with patch("connect_whatsapp.whatsapp_server.new_conversation") as mock_new_conv, \
-             patch("connect_whatsapp.whatsapp_server.reply", side_effect=RuntimeError("boom")), \
-             patch("connect_whatsapp.whatsapp_server.send_whatsapp_message") as mock_send:
-            mock_new_conv.return_value = Conversation(chat=Mock())
-            response = self.client.post("/webhook", data=body, content_type="application/json",
-                                         headers={"X-Hub-Signature-256": sign(body)})
-        self.assertEqual(response.status_code, 200)
-        mock_send.assert_called_once()
-        self.assertIn("barista", mock_send.call_args[0][3].lower())
-
-    def test_health_endpoint_reports_active_conversation_count(self):
-        response = self.client.get("/health")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["active_conversations"], 0)
-
-
-def all_required_env(**overrides) -> dict:
-    env = {name: f"fake-{name.lower()}" for name in REQUIRED_ENV_VARS}
-    env.update(overrides)
-    return env
-
-
-class MakeAppTests(unittest.TestCase):
-    """make_app() is the zero-argument factory a production WSGI server
-    (gunicorn on Render) imports and calls -- these confirm it reads
-    config from the environment the way connect_whatsapp/whatsapp-
-    integration.md documents, without making any real network call."""
-
+class WebhookTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        self.menu_path = Path(directory.name, "structure.json")
-        self.menu_path.write_text("{}", encoding="utf-8")
+        self.path = Path(directory.name) / "messages.sqlite3"
+        self.store = MessageStore(self.path)
+        self.app = create_app(self.store, PHONE_ID, "verify", SECRET)
 
-    def test_missing_env_var_raises_a_clear_error(self):
-        env = all_required_env()
+    def post(self, value):
+        body = json.dumps(value).encode()
+        with self.app.test_client() as client:
+            return client.post("/webhook", data=body, content_type="application/json",
+                               headers={"X-Hub-Signature-256": sign(body)})
+
+    def test_signature_rejects_tampering_missing_and_unicode_headers(self):
+        self.assertTrue(verify_signature(SECRET, b"ok", sign(b"ok")))
+        for header in (None, "bad", "sha256=" + "x" * 64, "sha256=" + "\u00e9" * 64, sign(b"other")):
+            self.assertFalse(verify_signature(SECRET, b"ok", header))
+
+    def test_handshake_requires_token(self):
+        with self.app.test_client() as client:
+            args = {"hub.mode": "subscribe", "hub.verify_token": "verify", "hub.challenge": "challenge"}
+            self.assertEqual(client.get("/webhook", query_string=args).data, b"challenge")
+            args["hub.verify_token"] = "wrong"
+            self.assertEqual(client.get("/webhook", query_string=args).status_code, 403)
+
+    def test_unsigned_message_is_not_enqueued(self):
+        with self.app.test_client() as client:
+            self.assertEqual(client.post("/webhook", json=payload("one")).status_code, 403)
+        self.assertEqual(self.store.stats()["pending"], 0)
+
+    def test_acknowledges_only_after_durable_enqueue_without_network_calls(self):
+        with patch("requests.post", side_effect=AssertionError("No network in webhook")):
+            result = self.post(payload("one"))
+        self.assertEqual(result.status_code, 200)
+        reopened = MessageStore(self.path)
+        self.assertEqual(reopened.claim().message_id, "one")
+
+    def test_all_entries_changes_and_messages_are_enqueued(self):
+        data = payload("one", "two")
+        data["entry"][0]["changes"].extend(payload("three")["entry"][0]["changes"])
+        data["entry"].extend(payload("four")["entry"])
+        result = self.post(data)
+        self.assertEqual(result.json["accepted"], 4)
+        self.assertEqual(self.store.stats()["pending"], 4)
+
+    def test_concurrent_redeliveries_are_deduplicated(self):
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda _: self.post(payload("same")), range(8)))
+        self.assertTrue(all(r.status_code == 200 for r in results))
+        self.assertEqual(sum(r.json["accepted"] for r in results), 1)
+
+    def test_non_text_receipts_and_other_phone_numbers_are_ignored(self):
+        for variant in ("image", "receipt", "other-phone"):
+            with self.subTest(variant=variant):
+                data = payload("one")
+                value = data["entry"][0]["changes"][0]["value"]
+                if variant == "image":
+                    value["messages"][0]["type"] = "image"
+                elif variant == "receipt":
+                    del value["messages"]
+                    value["statuses"] = [{"status": "read"}]
+                else:
+                    value["metadata"]["phone_number_id"] = "another"
+                self.assertEqual(self.post(data).json["status"], "ignored")
+        self.assertEqual(self.store.stats()["pending"], 0)
+
+    def test_malformed_text_batch_is_rejected_without_partial_acceptance(self):
+        data = payload("good", "bad")
+        del data["entry"][0]["changes"][0]["value"]["messages"][1]["id"]
+        self.assertEqual(self.post(data).status_code, 400)
+        self.assertEqual(self.store.stats()["pending"], 0)
+        for invalid in (None, [], {}, {"entry": [None]}, {"object": "whatsapp_business_account", "entry": [None]}):
+            self.assertEqual(self.post(invalid).status_code, 400)
+
+    def test_storage_failure_is_not_acknowledged_as_success(self):
+        with patch.object(self.store, "enqueue", side_effect=sqlite3.OperationalError("disk full")):
+            self.assertEqual(self.post(payload("one")).status_code, 503)
+
+    def test_request_and_message_limits(self):
+        data = payload("one")
+        data["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"] = "x" * 4097
+        self.assertEqual(self.post(data).status_code, 400)
+        with self.app.test_client() as client:
+            self.assertEqual(client.post("/webhook", data=b"x" * (256 * 1024 + 1)).status_code, 413)
+
+    def test_readiness_detects_missing_worker_and_failed_jobs(self):
+        with self.app.test_client() as client:
+            self.assertEqual(client.get("/health").status_code, 200)
+            self.assertEqual(client.get("/ready").status_code, 503)
+            self.store.heartbeat("worker")
+            self.assertEqual(client.get("/ready").status_code, 200)
+            self.post(payload("one"))
+            self.store.fail(self.store.claim(), "permanent failure", retryable=False)
+            self.assertEqual(client.get("/ready").json["failed"], 1)
+            self.assertEqual(client.get("/ready").json["status"], "degraded")
+            self.assertEqual(client.get("/ready").status_code, 200)
+
+    def test_factory_needs_only_webhook_credentials_and_persistent_path(self):
+        env = {name: "test-value" for name in REQUIRED_ENV_VARS}
+        env["WHATSAPP_PHONE_NUMBER_ID"] = PHONE_ID
+        env["WHATSAPP_DB_PATH"] = str(self.path)
+        with patch.dict("os.environ", env, clear=True):
+            self.assertIsNotNone(make_app())
         del env["WHATSAPP_APP_SECRET"]
-        env["MENU_FILE"] = str(self.menu_path)
-        with patch.dict("os.environ", env, clear=True):
-            with self.assertRaisesRegex(RuntimeError, "WHATSAPP_APP_SECRET"):
-                make_app()
+        with patch.dict("os.environ", env, clear=True), self.assertRaisesRegex(RuntimeError, "APP_SECRET"):
+            make_app()
 
-    def test_missing_menu_file_raises_a_clear_error(self):
-        env = all_required_env(MENU_FILE=str(self.menu_path.with_name("nope.json")))
-        with patch.dict("os.environ", env, clear=True):
-            with self.assertRaisesRegex(RuntimeError, "Menu file not found"):
-                make_app()
 
-    def test_valid_config_builds_the_app_from_env_vars(self):
-        env = all_required_env(MENU_FILE=str(self.menu_path), PINECONE_INDEX="custom-index",
-                                CHATBOT_TOP_K="7")
-        with patch.dict("os.environ", env, clear=True), \
-             patch("connect_whatsapp.whatsapp_server.build_engine") as mock_build_engine:
-            mock_build_engine.return_value = ChatEngine(
-                menu_by_id={}, embedder=Mock(), index=Mock(), top_k=7,
-                genai_client=Mock(), gemini_model="gemini-3.5-flash-lite", system_instruction="x",
-            )
-            app = make_app()
-        self.assertIsNotNone(app)
-        mock_build_engine.assert_called_once()
-        self.assertEqual(mock_build_engine.call_args.kwargs["index_name"], "custom-index")
-        self.assertEqual(mock_build_engine.call_args.kwargs["top_k"], 7)
+class SendTests(unittest.TestCase):
+    def test_success_validates_provider_id_and_sets_timeout(self):
+        response = Mock(status_code=200)
+        response.json.return_value = {"messages": [{"id": "outbound"}]}
+        with patch("connect_whatsapp.whatsapp_server.requests.post", return_value=response) as post:
+            self.assertEqual(send_whatsapp_message("token", PHONE_ID, "60123", "hello"), "outbound")
+        self.assertEqual(post.call_args.kwargs["timeout"], (5, 30))
+        self.assertEqual(post.call_args.kwargs["json"]["text"]["body"], "hello")
+
+    def test_transient_and_permanent_failures_are_distinguished(self):
+        for status in (400, 401, 403, 408, 429, 500, 503):
+            with self.subTest(status=status), patch("connect_whatsapp.whatsapp_server.requests.post",
+                                                  return_value=Mock(status_code=status)):
+                with self.assertRaises(DeliveryError) as exc:
+                    send_whatsapp_message("token", PHONE_ID, "60123", "hello")
+                self.assertEqual(exc.exception.retryable, status in (408, 429) or status >= 500)
+
+    def test_timeouts_and_invalid_success_payloads_are_retryable(self):
+        with patch("connect_whatsapp.whatsapp_server.requests.post", side_effect=requests.Timeout("secret")):
+            with self.assertRaises(DeliveryError) as exc:
+                send_whatsapp_message("token", PHONE_ID, "60123", "hello")
+        self.assertTrue(exc.exception.retryable)
+        self.assertNotIn("secret", str(exc.exception))
+        response = Mock(status_code=200)
+        response.json.return_value = {}
+        with patch("connect_whatsapp.whatsapp_server.requests.post", return_value=response):
+            with self.assertRaises(DeliveryError):
+                send_whatsapp_message("token", PHONE_ID, "60123", "hello")
 
 
 if __name__ == "__main__":

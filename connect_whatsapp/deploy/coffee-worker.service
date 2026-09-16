@@ -1,0 +1,25 @@
+[Unit]
+Description=Coffee assistant WhatsApp reply worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=coffee
+Group=coffee
+WorkingDirectory=/opt/coffee-assistant
+EnvironmentFile=/etc/coffee-assistant.env
+StateDirectory=coffee-assistant
+StateDirectoryMode=0700
+UMask=0077
+ExecStart=/opt/coffee-assistant/.venv/bin/python -m connect_whatsapp.message_worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=300
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/coffee-assistant
+
+[Install]
+WantedBy=multi-user.target

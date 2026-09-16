@@ -7,3 +7,4 @@ __pycache__/
 # scripts (OCR cache, structure-generation runs, embeddings, verification
 # previews) -- never hand-authored, never committed.
 generate_embedding/data/
+connect_whatsapp/data/

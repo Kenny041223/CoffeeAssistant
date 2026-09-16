@@ -1,0 +1,30 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: '**/requirements*.txt'
+      - run: python -m pip install -r connect_whatsapp/requirements-whatsapp.txt
+      - run: python -m pip check
+      - run: python -m unittest discover -s generate_embedding/tests -v
+      - run: python -m unittest discover -s generate_prompt/tests -v
+      - run: python -m unittest discover -s connect_whatsapp/tests -v
+      - name: Check production app factory
+        if: runner.os == 'Linux'
+        env:
+          WHATSAPP_PHONE_NUMBER_ID: '12345'
+          WHATSAPP_VERIFY_TOKEN: test-token
+          WHATSAPP_APP_SECRET: test-secret
+          WHATSAPP_DB_PATH: ${{ runner.temp }}/factory.sqlite3
+        run: gunicorn --check-config 'connect_whatsapp.whatsapp_server:make_app()'

@@ -76,7 +76,8 @@ class GeminiEmbedder:
         except ImportError as exc:
             raise RuntimeError("Install generate_embedding/requirements-gemini.txt first") from exc
         self._types = types
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(api_key=api_key, http_options={
+            "timeout": 45000, "retry_options": {"attempts": 1}})
         self.batch_size = batch_size
         self.max_length = max_length
 

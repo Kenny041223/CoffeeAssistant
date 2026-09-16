@@ -184,6 +184,41 @@ class ConsistencyTests(unittest.TestCase):
         menu = StructuredMenu.model_validate(menu_raw)
         check_consistency(embeddings, menu, current_sha)  # must not raise
 
+    def test_incomplete_embeddings_cannot_schedule_current_products_for_deletion(self):
+        from generate_embedding.embeddings import MenuEmbeddings
+        raw = menu_payload()
+        menu = StructuredMenu.model_validate(raw)
+        payload = embeddings_payload(raw)
+        payload["products"] = payload["products"][:1]
+        for count in (1, 2):
+            payload["product_count"] = count
+            embeddings = MenuEmbeddings.model_validate(payload)
+            with self.assertRaisesRegex(ValueError, "cover every"):
+                check_consistency(embeddings, menu, payload["menu_sha256"])
+            with self.assertRaisesRegex(ValueError, "cover every"):
+                plan_sync(embeddings, menu, {p.product_id for p in menu.products})
+
+    def test_duplicate_ids_wrong_counts_and_bad_vectors_are_rejected(self):
+        from generate_embedding.embeddings import MenuEmbeddings
+        for defect in ("duplicate_embedding", "duplicate_menu", "embedding_count", "menu_count", "zero_vector"):
+            with self.subTest(defect=defect):
+                raw = menu_payload()
+                payload = embeddings_payload(raw)
+                if defect == "duplicate_embedding":
+                    payload["products"][1] = payload["products"][0]
+                elif defect == "duplicate_menu":
+                    raw["products"][1] = raw["products"][0]
+                elif defect == "embedding_count":
+                    payload["product_count"] = 99
+                elif defect == "menu_count":
+                    raw["product_count"] = 99
+                else:
+                    payload["products"][0]["vector"] = [0.0] * 768
+                menu = StructuredMenu.model_validate(raw)
+                embeddings = MenuEmbeddings.model_validate(payload)
+                with self.assertRaises(ValueError):
+                    plan_sync(embeddings, menu, {"latte-permanent", "tiramisu"})
+
 
 if __name__ == "__main__":
     unittest.main()
