@@ -146,11 +146,28 @@ customers can bring their own coffee beans -- come from
 rather than `structure.json`; see
 [docs/customer-assistant-notes.md](docs/customer-assistant-notes.md) for why.
 
+## WhatsApp
+
+```powershell
+.\connect_whatsapp\run_whatsapp_server.ps1
+```
+
+Bridges the same chatbot core to a real WhatsApp number via Meta's official
+WhatsApp Cloud API -- a webhook server, not a terminal loop, so it needs a
+Meta Business/Developer app and a public HTTPS URL Meta can reach. No reply
+logic is duplicated: [connect_whatsapp/whatsapp_server.py](connect_whatsapp/whatsapp_server.py)
+only handles receiving Meta's webhook calls and sending replies back
+through the Graph API, calling straight into `generate_prompt/chatbot.py`'s
+`build_engine()`/`reply()`, with one conversation kept per customer phone
+number. Full setup walkthrough (Meta app config, credentials, webhook,
+local testing with a tunnel vs. real deployment) in
+[connect_whatsapp/whatsapp-integration.md](connect_whatsapp/whatsapp-integration.md).
+
 ## Project layout
 
 Everything the pipeline runs -- schemas, OCR, both menu-generation
 pipelines, embeddings, and Pinecone sync -- lives in one folder, plus the
-chatbot in its own:
+chatbot in its own, and the WhatsApp bridge in a third:
 
 ```text
 generate_embedding/menu.py                  Final menu schema (shared by every stage)
@@ -177,6 +194,11 @@ generate_prompt/shop_policies.json      Shop policy facts (hours, BYO beans, etc
 generate_prompt/run_chatbot.ps1         Run the chatbot
 generate_prompt/requirements-chatbot.txt Deps for the chatbot (no GPU)
 generate_prompt/tests/                  Automated tests with mock inference
+connect_whatsapp/whatsapp_server.py     WhatsApp Cloud API webhook bridge (reuses chatbot.py)
+connect_whatsapp/run_whatsapp_server.ps1 Run the WhatsApp webhook server
+connect_whatsapp/requirements-whatsapp.txt Deps for the WhatsApp server
+connect_whatsapp/whatsapp-integration.md Meta setup and deployment walkthrough
+connect_whatsapp/tests/                 Automated tests with mock Meta/Gemini/Pinecone calls
 docs/                        OCR setup and customer-assistant design notes
 generate_embedding/image/    Input menu images
 generate_embedding/data/qwen-ocr/     Local OCR evidence, generated at runtime

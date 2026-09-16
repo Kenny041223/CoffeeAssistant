@@ -11,12 +11,21 @@ Gemini fresh on every turn; Gemini's own chat session carries the
 conversation history. Everything here runs hosted -- no local model or GPU
 needed for either retrieval or reply generation.
 
-No network clients connect until main() actually runs.
+`build_engine()`/`reply()` are the reusable core: build one ChatEngine at
+startup, then call reply() per incoming message with a per-customer
+Conversation. The terminal loop in main() below is one caller of that core;
+connect_whatsapp/whatsapp_server.py (one Conversation per WhatsApp contact
+instead of one global one) is another -- both call the exact same retrieval
+and prompting logic rather than each reimplementing it.
+
+No network clients connect until build_engine() actually runs.
 """
 import argparse
 import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from generate_embedding.embed_menu import GeminiEmbedder
 from generate_embedding.menu import MenuProduct, StructuredMenu
@@ -143,7 +152,7 @@ def format_context(products: list[MenuProduct]) -> str:
 
 
 def retrieve(user_message: str, embedder: GeminiEmbedder, index, menu_by_id: dict[str, MenuProduct],
-             top_k: int, last_reply: str | None = None) -> list[MenuProduct]:
+             top_k: int, last_reply: str | None = None, namespace: str | None = None) -> list[MenuProduct]:
     # A short follow-up ("the seasonal one please") carries almost no
     # retrievable meaning on its own -- the topic lives in the previous
     # turn. Folding the last reply into the search embedding (but never
@@ -151,8 +160,86 @@ def retrieve(user_message: str, embedder: GeminiEmbedder, index, menu_by_id: dic
     # a separate query-rewriting call.
     search_text = f"{last_reply}\n{user_message}" if last_reply else user_message
     vector = embedder.encode_query(search_text)
-    matches = index.query(vector=vector, top_k=top_k, include_metadata=False).matches
+    matches = index.query(vector=vector, top_k=top_k, namespace=namespace, include_metadata=False).matches
     return [menu_by_id[m.id] for m in matches if m.id in menu_by_id]
+
+
+@dataclass
+class ChatEngine:
+    """Everything a reply needs that's shared across every customer and
+    every turn -- built once at process startup, then read-only after
+    that. Safe to share across concurrently-handled WhatsApp conversations
+    since nothing here is mutated per-turn (per-customer state lives in
+    Conversation instead)."""
+    menu_by_id: dict[str, MenuProduct]
+    embedder: GeminiEmbedder
+    index: Any  # pinecone.Index -- left untyped so this module never has to import pinecone at all
+    top_k: int
+    genai_client: Any  # google.genai.Client
+    gemini_model: str
+    system_instruction: str
+    namespace: str | None = None
+
+
+@dataclass
+class Conversation:
+    """Per-customer state: one of these per person the bot is talking to.
+    In the terminal chatbot there's exactly one, for the life of the
+    process; the WhatsApp server keeps one per phone number."""
+    chat: Any  # google.genai chat session (client.chats.create(...))
+    last_reply: str | None = None
+
+
+def build_engine(menu_path: Path, pinecone_key: str, gemini_key: str, index_name: str,
+                  namespace: str | None, top_k: int, gemini_model: str,
+                  shop_policies_path: Path) -> ChatEngine:
+    """Loads the menu, connects to Pinecone and Gemini, and assembles the
+    system instruction (base prompt + shop policies, if any). Does not
+    start a conversation -- call new_conversation() per customer."""
+    menu = StructuredMenu.model_validate_json(menu_path.read_text(encoding="utf-8"))
+    menu_by_id = {p.product_id: p for p in menu.products}
+    shop_policies = load_shop_policies(shop_policies_path)
+
+    embedder = GeminiEmbedder(api_key=gemini_key, batch_size=1)
+
+    from pinecone import Pinecone
+    index = Pinecone(api_key=pinecone_key).Index(index_name)
+
+    from google import genai
+    genai_client = genai.Client(api_key=gemini_key)
+
+    system_instruction = SYSTEM_PROMPT
+    policies_block = format_shop_policies(shop_policies)
+    if policies_block:
+        system_instruction = f"{SYSTEM_PROMPT}\n\n{policies_block}"
+
+    return ChatEngine(menu_by_id=menu_by_id, embedder=embedder, index=index, top_k=top_k,
+                       genai_client=genai_client, gemini_model=gemini_model,
+                       system_instruction=system_instruction, namespace=namespace)
+
+
+def new_conversation(engine: ChatEngine) -> Conversation:
+    from google.genai import types
+    chat = engine.genai_client.chats.create(
+        model=engine.gemini_model,
+        config=types.GenerateContentConfig(system_instruction=engine.system_instruction),
+    )
+    return Conversation(chat=chat)
+
+
+def reply(engine: ChatEngine, conversation: Conversation, user_message: str) -> str:
+    """Retrieve relevant products, hand them to this customer's Gemini chat
+    session as fresh per-turn context, and return the reply text. Mutates
+    conversation.last_reply so the NEXT call's retrieval can use it."""
+    products = retrieve(user_message, engine.embedder, engine.index, engine.menu_by_id,
+                         engine.top_k, conversation.last_reply, engine.namespace)
+    turn_content = (
+        f"Menu context (retrieved for this message only):\n{format_context(products)}\n\n"
+        f"Customer: {user_message}"
+    )
+    response = conversation.chat.send_message(turn_content)
+    conversation.last_reply = response.text
+    return response.text
 
 
 def main() -> int:
@@ -189,29 +276,14 @@ def main() -> int:
         print("GEMINI_API_KEY is not set.", file=sys.stderr)
         return 1
 
-    menu = StructuredMenu.model_validate_json(args.menu.read_text(encoding="utf-8"))
-    menu_by_id = {p.product_id: p for p in menu.products}
-    shop_policies = load_shop_policies(args.shop_policies)
-
-    embedder = GeminiEmbedder(api_key=gemini_key, batch_size=1)
-
-    from pinecone import Pinecone
-    index = Pinecone(api_key=pinecone_key).Index(args.index)
-
-    from google import genai
-    from google.genai import types
-    client = genai.Client(api_key=gemini_key)
-    system_instruction = SYSTEM_PROMPT
-    policies_block = format_shop_policies(shop_policies)
-    if policies_block:
-        system_instruction = f"{SYSTEM_PROMPT}\n\n{policies_block}"
-    chat = client.chats.create(
-        model=args.gemini_model,
-        config=types.GenerateContentConfig(system_instruction=system_instruction),
+    engine = build_engine(
+        menu_path=args.menu, pinecone_key=pinecone_key, gemini_key=gemini_key,
+        index_name=args.index, namespace=args.namespace or None, top_k=args.top_k,
+        gemini_model=args.gemini_model, shop_policies_path=args.shop_policies,
     )
+    conversation = new_conversation(engine)
 
-    print(f"Ready ({len(menu.products)} products indexed). Type a message, or 'quit' to exit.\n")
-    last_reply: str | None = None
+    print(f"Ready ({len(engine.menu_by_id)} products indexed). Type a message, or 'quit' to exit.\n")
     while True:
         try:
             user_message = input("You: ").strip()
@@ -223,14 +295,7 @@ def main() -> int:
         if user_message.lower() in ("quit", "exit"):
             break
 
-        products = retrieve(user_message, embedder, index, menu_by_id, args.top_k, last_reply)
-        turn_content = (
-            f"Menu context (retrieved for this message only):\n{format_context(products)}\n\n"
-            f"Customer: {user_message}"
-        )
-        response = chat.send_message(turn_content)
-        last_reply = response.text
-        print(f"Bot: {response.text}\n")
+        print(f"Bot: {reply(engine, conversation, user_message)}\n")
     return 0
 
 
