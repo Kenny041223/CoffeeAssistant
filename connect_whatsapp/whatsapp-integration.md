@@ -73,38 +73,6 @@ port and configure its `/webhook` URL in Meta. Both launchers use
 `connect_whatsapp/data/messages.sqlite3` unless `WHATSAPP_DB_PATH` overrides it.
 The worker must be running for queued messages to receive replies.
 
-## Production startup on Render
-
-Render's standard Web Service runs one process, but this architecture needs
-two (webhook + worker) sharing one local SQLite file. The practical fix on
-Render: run **both processes in the same service** via
-[`connect_whatsapp/start_render.sh`](start_render.sh), which launches the
-worker in the background and gunicorn in the foreground, sharing that one
-container's disk. If either process exits, the script stops the other and
-exits non-zero, so Render's restart-on-failure policy restarts the whole
-service cleanly rather than leaving it half-working (e.g. the webhook still
-accepting messages with no worker to answer them).
-
-1. **Add a Disk** to the Render service (Settings > Disks > Add Disk) -- pick
-   a mount path, e.g. `/var/data`. Without this, the SQLite file (and the
-   whole message queue) resets to empty on every restart/redeploy, since a
-   Render service's own filesystem is otherwise ephemeral.
-2. **Set `WHATSAPP_DB_PATH`** in the Environment tab to a path inside that
-   mount, e.g. `/var/data/messages.sqlite3`.
-3. **Build Command**: unchanged --
-   `pip install -r connect_whatsapp/requirements-whatsapp.txt`.
-4. **Start Command**: `bash connect_whatsapp/start_render.sh`.
-5. All the other environment variables from the table above still apply.
-
-This has been verified as a standalone supervisor pattern (equivalent dummy
-processes: killing either one correctly stops the other and propagates its
-exit code, with no orphaned process left running) but **not yet exercised
-with the real worker and gunicorn together** -- `gunicorn` is POSIX-only and
-doesn't run at all on Windows, so this gets its first real end-to-end test
-on Render itself. Watch the deploy logs for both "Booting worker" (gunicorn)
-and the message-worker's own startup log line after deploying, and send a
-real test message before considering it verified.
-
 ## Production startup on Linux
 
 Install the repository and virtual environment at `/opt/coffee-assistant`, create
