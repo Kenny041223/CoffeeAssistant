@@ -107,11 +107,14 @@ the free tier, so you'll re-enter it in Meta's dashboard each session.
 3. Settings:
    - **Runtime**: Python 3
    - **Build Command**: `pip install -r connect_whatsapp/requirements-whatsapp.txt`
-   - **Start Command**: `gunicorn --factory connect_whatsapp.whatsapp_server:make_app --bind 0.0.0.0:$PORT`
-     (Render sets `$PORT` itself; `make_app()` in `whatsapp_server.py` is a
-     zero-argument factory built exactly for this -- it reads all config
-     from environment variables instead of CLI flags, since gunicorn
-     imports the module rather than running it as a script.)
+   - **Start Command**: `gunicorn 'connect_whatsapp.whatsapp_server:make_app()' --bind 0.0.0.0:$PORT`
+     (Render sets `$PORT` itself. The trailing `()` after `make_app` is
+     gunicorn's own syntax for "call this as a zero-argument factory to get
+     the real app" -- not a flag; gunicorn has no `--factory` option, that's
+     a different tool's convention, e.g. uvicorn's. `make_app()` in
+     `whatsapp_server.py` reads all config from environment variables
+     instead of CLI flags, since gunicorn imports the module rather than
+     running it as a script.)
    - **Instance type**: the free tier is fine to start.
 4. **Environment** tab: add each of the six required variables --
    `PINECONE_API_KEY`, `GEMINI_API_KEY`, `WHATSAPP_ACCESS_TOKEN`,

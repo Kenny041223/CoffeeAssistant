@@ -194,7 +194,11 @@ def _build_flask_app(menu_path: Path, index_name: str, namespace: str | None, to
 def make_app() -> Flask:
     """Zero-argument app factory for a real WSGI server in production, e.g.
     on Render:
-        gunicorn --factory connect_whatsapp.whatsapp_server:make_app --bind 0.0.0.0:$PORT
+        gunicorn 'connect_whatsapp.whatsapp_server:make_app()' --bind 0.0.0.0:$PORT
+    The trailing () in the app string is gunicorn's own syntax for "call
+    this as a factory" -- gunicorn has no --factory flag (that's a
+    different tool's convention, e.g. uvicorn's). Quote the whole app
+    string in a shell so the parentheses aren't interpreted by the shell.
     A WSGI server imports this module and calls this function itself --
     there's no argv to parse, so every setting comes from an environment
     variable instead of a CLI flag (same defaults as main()'s flags below).
