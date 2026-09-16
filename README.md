@@ -132,9 +132,9 @@ An interactive, terminal-based chat loop: embeds the customer's message
 (same Gemini embedding model as the menu, so retrieval actually works),
 searches Pinecone, pulls each match's full record from `structure.json`
 (Pinecone's metadata is a flattened summary, not the source of truth), and
-hands that as grounding context to Gemini for the actual reply. Gemini's own
-chat session carries conversation history; retrieval context is refreshed
-every turn. See [generate_prompt/chatbot.py](generate_prompt/chatbot.py)'s
+hands that as grounding context to Gemini for the actual reply. Bounded dialogue
+history is carried separately; retrieval context is refreshed every turn and
+includes product review notes and add-on offers. See [generate_prompt/chatbot.py](generate_prompt/chatbot.py)'s
 module docstring and `SYSTEM_PROMPT` for the grounding rules (never invent a
 price, ask house-blend-vs-seasonal before quoting one, stay on menu topics).
 Nothing here runs locally -- retrieval and generation are both hosted.
@@ -150,17 +150,19 @@ rather than `structure.json`; see
 
 ```powershell
 .\connect_whatsapp\run_whatsapp_server.ps1
+# In a second terminal:
+.\connect_whatsapp\run_whatsapp_worker.ps1
 ```
 
 Bridges the same chatbot core to a real WhatsApp number via Meta's official
 WhatsApp Cloud API -- a webhook server, not a terminal loop, so it needs a
 Meta Business/Developer app and a public HTTPS URL Meta can reach. No reply
 logic is duplicated: [connect_whatsapp/whatsapp_server.py](connect_whatsapp/whatsapp_server.py)
-only handles receiving Meta's webhook calls and sending replies back
-through the Graph API, calling straight into `generate_prompt/chatbot.py`'s
-`build_engine()`/`reply()`, with one conversation kept per customer phone
-number. Full setup walkthrough (Meta app config, credentials, webhook,
-local testing with a tunnel vs. real deployment) in
+validates and durably queues incoming batches before acknowledgment. A separate
+worker calls `generate_prompt/chatbot.py`'s `build_engine()`/`reply()` and sends
+saved replies with bounded retries. SQLite stores message IDs and expiring
+conversations on persistent local disk. This supports one host with multiple
+processes; deployment and recovery instructions are in
 [connect_whatsapp/whatsapp-integration.md](connect_whatsapp/whatsapp-integration.md).
 
 ## Project layout
@@ -195,7 +197,10 @@ generate_prompt/run_chatbot.ps1         Run the chatbot
 generate_prompt/requirements-chatbot.txt Deps for the chatbot (no GPU)
 generate_prompt/tests/                  Automated tests with mock inference
 connect_whatsapp/whatsapp_server.py     WhatsApp Cloud API webhook bridge (reuses chatbot.py)
+connect_whatsapp/message_store.py       Durable queue, deduplication, leases and sessions
+connect_whatsapp/message_worker.py      Reply generation and delivery retries
 connect_whatsapp/run_whatsapp_server.ps1 Run the WhatsApp webhook server
+connect_whatsapp/run_whatsapp_worker.ps1 Run the reply worker / inspect failed jobs
 connect_whatsapp/requirements-whatsapp.txt Deps for the WhatsApp server
 connect_whatsapp/whatsapp-integration.md Meta setup and deployment walkthrough
 connect_whatsapp/tests/                 Automated tests with mock Meta/Gemini/Pinecone calls
@@ -226,4 +231,5 @@ embedding generation, Pinecone sync, and a working terminal chatbot
   rotation, price updates): re-run OCR -> structure generation -> embeddings
   -> Pinecone sync; the consistency checks already refuse stale data.
 
-Deployment and a non-terminal interface are still planned work.
+Production startup templates and offline regression tests are included. Real
+staging validation and load/response-quality evaluation remain deployment work.

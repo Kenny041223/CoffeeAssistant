@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 
 from generate_embedding.embeddings import EMBEDDING_DIMENSIONS, MenuEmbeddings
+from generate_embedding.embed_menu import validate_vectors
 from generate_embedding.menu import StructuredMenu
 
 DEFAULT_INDEX = "coffee-menu"
@@ -54,6 +55,7 @@ def check_consistency(embeddings: MenuEmbeddings, menu: StructuredMenu, menu_sha
             "menu-embeddings.json was generated from a different structure.json "
             "(menu_sha256 mismatch). Regenerate embeddings against the current menu first."
         )
+    check_coverage(embeddings, menu)
     by_id = {p.product_id for p in menu.products}
     text_by_id = {p.product_id: p.search_text for p in menu.products}
     for record in embeddings.products:
@@ -68,6 +70,24 @@ def check_consistency(embeddings: MenuEmbeddings, menu: StructuredMenu, menu_sha
                 f"search_text for {record.product_id} changed since embeddings were generated "
                 "(text_sha256 mismatch); regenerate embeddings before syncing."
             )
+
+
+def check_coverage(embeddings: MenuEmbeddings, menu: StructuredMenu) -> None:
+    menu_ids = [p.product_id for p in menu.products]
+    embedding_ids = [p.product_id for p in embeddings.products]
+    if any(not pid.strip() or pid != pid.strip() for pid in menu_ids + embedding_ids):
+        raise ValueError("Product IDs must be nonempty and have no surrounding whitespace")
+    if len(set(menu_ids)) != len(menu_ids) or len(set(embedding_ids)) != len(embedding_ids):
+        raise ValueError("Duplicate product IDs in menu or embeddings")
+    if set(embedding_ids) - set(menu_ids):
+        raise ValueError("Embedding has no matching product in the current menu")
+    if not menu_ids or set(menu_ids) != set(embedding_ids):
+        raise ValueError("Embeddings must cover every menu product exactly once")
+    if menu.product_count != len(menu_ids) or embeddings.product_count != len(embedding_ids):
+        raise ValueError("Product counts do not match the records")
+    if menu.source_count != len(menu.sources):
+        raise ValueError("Source count does not match the menu")
+    validate_vectors([p.vector for p in embeddings.products], len(menu_ids))
 
 
 def build_metadata(product) -> dict:
@@ -113,6 +133,7 @@ def existing_vector_ids(index, namespace: str | None) -> set[str]:
 
 def plan_sync(embeddings: MenuEmbeddings, menu: StructuredMenu, existing_ids: set[str]) -> tuple[list[dict], set[str]]:
     """Pure computation: what to upsert and what to delete. No network calls."""
+    check_coverage(embeddings, menu)
     products_by_id = {p.product_id: p for p in menu.products}
     upserts = [
         {"id": record.product_id, "values": record.vector,
