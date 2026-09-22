@@ -267,7 +267,7 @@ def build_engine(menu_path: Path, pinecone_key: str, gemini_key: str, index_name
     embedder = GeminiEmbedder(api_key=gemini_key, batch_size=1)
 
     from pinecone import Pinecone
-    index = Pinecone(api_key=pinecone_key, timeout=30).Index(index_name, timeout=30)
+    index = Pinecone(api_key=pinecone_key, timeout=30).Index(index_name)
 
     from google import genai
     genai_client = genai.Client(api_key=gemini_key, http_options={
