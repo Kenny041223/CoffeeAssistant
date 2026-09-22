@@ -1292,8 +1292,8 @@
     "num_predict": 4096,
     "metrics": {}
   },
-  "currency": null,
-  "currency_source": "unspecified",
+  "currency": "RM",
+  "currency_source": "user_config",
   "source_count": 14,
   "product_count": 23,
   "sources": [
